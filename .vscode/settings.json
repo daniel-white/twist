@@ -1,0 +1,8 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "cSpell.words": [
+        "structopt",
+        "subcommand"
+    ]
+}
