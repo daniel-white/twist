@@ -1,32 +1,33 @@
 use crate::fs::manager::FileManager;
-use crate::fs::paths::resolve;
-use crate::{DEFAULT_PROFILE, PROFILE_ENV};
+use crate::fs::paths::resolve_paths;
+use crate::fs::paths::ResolvedPaths;
+use anyhow::Result;
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+enum Error {}
+
 #[derive(Debug, StructOpt)]
 pub struct Opt {
-    #[structopt(long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE)]
-    profile: String,
-
     #[structopt(long, short = "m")]
     message: Option<String>,
 
-    #[structopt(parse(from_os_str))]
+    #[structopt(parse(from_os_str), required = true, min_values = 1)]
     paths: Vec<PathBuf>,
 }
 
-pub fn run(opt: Opt) {
+pub fn run(opt: Opt, _profile: &str) -> Result<()> {
     let mut file_manager = FileManager::new();
-    let paths = resolve(&opt.paths);
-    let file_paths = paths.iter().filter(|i| i.1.is_file());
-    let dir_paths = paths.iter().filter(|i| i.1.is_dir());
+    let ResolvedPaths {
+        file_paths,
+        dir_paths,
+    } = resolve_paths(&opt.paths);
 
-    for (p, _) in file_paths {
-        file_manager.remove_file(p);
-    }
+    file_manager.remove_files(&file_paths);
+    file_manager.remove_dirs(&dir_paths);
 
-    for (p, _) in dir_paths {
-        file_manager.remove_dir(p);
-    }
+    Ok(())
 }

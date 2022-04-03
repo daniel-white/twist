@@ -32,16 +32,38 @@ pub fn hash_path<P: AsRef<Path>>(p: P) -> String {
     sha256.result_str()
 }
 
-pub fn resolve(paths: &Vec<PathBuf>) -> Vec<(PathBuf, fs::Metadata)> {
+#[derive(Debug)]
+pub struct ResolvedPaths {
+    pub dir_paths: Vec<PathBuf>,
+    pub file_paths: Vec<PathBuf>,
+}
+
+impl ResolvedPaths {
+    fn new() -> Self {
+        ResolvedPaths {
+            dir_paths: vec![],
+            file_paths: vec![],
+        }
+    }
+}
+
+pub fn resolve_paths(paths: &Vec<PathBuf>) -> ResolvedPaths {
     paths
         .iter()
-        .map(|p| p.to_str().unwrap())
-        .flat_map(|p| glob(p).unwrap())
-        .map(|p| p.unwrap())
-        .map(|p| fs::canonicalize(p).unwrap())
-        .map(|p| (Path::new(&p).to_path_buf(), fs::metadata(p).unwrap()))
-        .filter(|(_, m)| m.is_dir() || m.is_file())
-        .collect()
+        .filter_map(|p| p.to_str())
+        .filter_map(|p| glob(p).ok())
+        .flatten()
+        .flatten()
+        .filter_map(|p| fs::canonicalize(&p).ok())
+        .filter_map(|p| fs::metadata(&p).ok().and_then(|m| Some((p, m))))
+        .fold(ResolvedPaths::new(), |mut acc, (p, m)| {
+            if m.is_dir() {
+                acc.dir_paths.push(p);
+            } else if m.is_file() {
+                acc.file_paths.push(p);
+            }
+            acc
+        })
 }
 
 #[derive(Debug)]

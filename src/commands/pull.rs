@@ -1,12 +1,16 @@
-use crate::{DEFAULT_PROFILE, PROFILE_ENV};
+use anyhow::Result;
 use structopt::StructOpt;
+use thiserror::Error;
 
-#[derive(Debug, StructOpt)]
-pub struct Opt {
-    #[structopt(long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE)]
-    profile: String,
+#[derive(Error, Debug)]
+enum Error {
+    #[error("pull is not implemented")]
+    NotImplemented,
 }
 
-pub fn run(opt: Opt) {
-    println!("{:?}", opt);
+#[derive(Debug, StructOpt)]
+pub struct Opt {}
+
+pub fn run(_opt: Opt, _profile: &str) -> Result<()> {
+    Err(Error::NotImplemented)?
 }

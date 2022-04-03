@@ -1,15 +1,19 @@
-use crate::{DEFAULT_PROFILE, PROFILE_ENV};
+use anyhow::Result;
 use structopt::StructOpt;
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+enum Error {
+    #[error("update is not implemented")]
+    NotImplemented,
+}
 
 #[derive(Debug, StructOpt)]
 pub struct Opt {
-    #[structopt(long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE)]
-    profile: String,
-
     #[structopt(long, short = "m")]
     message: Option<String>,
 }
 
-pub fn run(opt: Opt) {
-    println!("{:?}", opt);
+pub fn run_update(_opt: Opt, _profile: &str) -> Result<()> {
+    Err(Error::NotImplemented)?
 }

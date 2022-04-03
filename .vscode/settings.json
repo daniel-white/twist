@@ -1,8 +1,16 @@
 {
-    "editor.formatOnSave": true,
-    "editor.formatOnType": true,
-    "cSpell.words": [
-        "structopt",
-        "subcommand"
-    ]
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "editor.defaultFormatter": "matklad.rust-analyzer",
+  "cSpell.words": [
+    "canonicalize",
+    "dotfiles",
+    "simplelog",
+    "structopt",
+    "subcommand",
+    "thiserror"
+  ],
+  "[rust]": {
+    "editor.defaultFormatter": "matklad.rust-analyzer"
+  }
 }
