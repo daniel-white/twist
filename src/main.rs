@@ -1,33 +1,54 @@
 #![feature(bool_to_option)]
 
-mod cli;
-pub mod consts;
-pub mod data;
-pub mod fs;
-mod logging;
+// pub mod data;
+// pub mod fs;
 
-use crate::logging::init as init_logging;
+mod commands;
+
 use anyhow::Result;
-use cli::parse_args;
-use data::switch_profile;
-use log::error;
+use twist_cli::init as init_cli;
+
+// use data::switch_profile;
+use commands::add::run;
+use log::{debug, error};
 use std::process::exit;
+use twist_shared::commands::Command;
 
 fn main() -> Result<()> {
-    parse_args()
-        .or_else(|err| {
-            eprintln!("{}", err);
-            exit(1);
-        })
-        .and_then(|args| init_logging(args.verbose).map(|_| args))
-        .or_else(|err| {
-            eprintln!("Logging initialization error: {}", err);
-            exit(2);
-        })
-        .and_then(|args| switch_profile(args.profile.as_str()).map(|_| args))
-        .and_then(|args| args.command.run())
-        .or_else(|err| {
-            error!("{}", err);
-            exit(3);
-        })
+    let cmd = init_cli()?;
+    debug!("Command: {:?}", cmd);
+
+    if let Command::AddFiles(addFiles) = cmd {
+        run(addFiles);
+    }
+
+    Ok(())
+    // match  {
+    //     Ok(args) => {
+    //         println!("{:?}", args);
+    //         Ok(())
+    //         // init_logging(cli.verbose).into()
+    //         //switch_profile(&cli.profile);
+    //     }
+    //     Err(err) => {
+    //         error!("{}", err);
+    //         exit(1);
+    //     }
+    // }
+    // parse_args()
+    //     .or_else(|err| {
+    //         eprintln!("{}", err);
+    //         exit(1);
+    //     })
+    //     .and_then(|args| init_logging(args.verbose).map(|_| args))
+    //     .or_else(|err| {
+    //         eprintln!("Logging initialization error: {}", err);
+    //         exit(2);
+    //     })
+    //     .and_then(|args| switch_profile(args.profile.as_str()).map(|_| args))
+    //     .and_then(|args| args.command.run())
+    //     .or_else(|err| {
+    //         error!("{}", err);
+    //         exit(3);
+    //     })
 }

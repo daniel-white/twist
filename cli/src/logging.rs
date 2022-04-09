@@ -8,7 +8,7 @@ pub enum LoggingError {
     InitFailed,
 }
 
-pub fn init(verbose: bool) -> Result<(), LoggingError> {
+pub fn init(verbose: bool) -> Result<()> {
     TermLogger::init(
         verbose
             .then_some(LevelFilter::Debug)
@@ -19,5 +19,5 @@ pub fn init(verbose: bool) -> Result<(), LoggingError> {
         TerminalMode::Mixed,
         ColorChoice::Auto,
     )
-    .or(Err(LoggingError::InitFailed))
+    .or(Err(LoggingError::InitFailed.into()))
 }

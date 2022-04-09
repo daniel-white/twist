@@ -1,0 +1,11 @@
+[package]
+name = "twist_fs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+twist_shared = { path = "../shared" }
+anyhow = "1.0"
+dirs = "3.0"
+glob = "0.3"
+thiserror = "1.0"
