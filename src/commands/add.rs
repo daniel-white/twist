@@ -7,8 +7,10 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 use thiserror::Error;
 
+use super::Command;
+
 #[derive(Debug, StructOpt)]
-pub struct AddOpt {
+pub struct Add {
     #[structopt(long, short = "m")]
     message: Option<String>,
 
@@ -19,15 +21,17 @@ pub struct AddOpt {
 #[derive(Error, Debug)]
 enum AddError {}
 
-pub fn run_add(opt: AddOpt, _profile: &str) -> Result<()> {
-    let mut file_manager = FileManager::new();
-    let ResolvedPaths {
-        file_paths,
-        dir_paths,
-    } = resolve_paths(&opt.paths);
+impl Command for Add {
+    fn run(&self) -> Result<()> {
+        let mut file_manager = FileManager::new();
+        let ResolvedPaths {
+            file_paths,
+            dir_paths,
+        } = resolve_paths(&self.paths);
 
-    file_manager.add_files(&file_paths);
-    file_manager.add_dirs(&dir_paths);
+        file_manager.add_files(&file_paths);
+        file_manager.add_dirs(&dir_paths);
 
-    Ok(())
+        Ok(())
+    }
 }

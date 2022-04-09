@@ -2,18 +2,22 @@ use anyhow::Result;
 use structopt::StructOpt;
 use thiserror::Error;
 
-#[derive(Error, Debug)]
-enum Error {
-    #[error("update is not implemented")]
-    NotImplemented,
-}
+use super::Command;
 
 #[derive(Debug, StructOpt)]
-pub struct Opt {
+pub struct Update {
     #[structopt(long, short = "m")]
     message: Option<String>,
 }
 
-pub fn run_update(_opt: Opt, _profile: &str) -> Result<()> {
-    Err(Error::NotImplemented)?
+#[derive(Error, Debug)]
+enum UpdateError {
+    #[error("update is not implemented")]
+    NotImplemented,
+}
+
+impl Command for Update {
+    fn run(&self) -> Result<()> {
+        Err(UpdateError::NotImplemented)?
+    }
 }

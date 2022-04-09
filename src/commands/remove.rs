@@ -1,17 +1,14 @@
+use super::Command;
 use crate::fs::manager::FileManager;
 use crate::fs::paths::resolve_paths;
 use crate::fs::paths::ResolvedPaths;
 use anyhow::Result;
 use std::path::PathBuf;
 use structopt::StructOpt;
-
 use thiserror::Error;
 
-#[derive(Error, Debug)]
-enum Error {}
-
 #[derive(Debug, StructOpt)]
-pub struct Opt {
+pub struct Remove {
     #[structopt(long, short = "m")]
     message: Option<String>,
 
@@ -19,15 +16,20 @@ pub struct Opt {
     paths: Vec<PathBuf>,
 }
 
-pub fn run(opt: Opt, _profile: &str) -> Result<()> {
-    let mut file_manager = FileManager::new();
-    let ResolvedPaths {
-        file_paths,
-        dir_paths,
-    } = resolve_paths(&opt.paths);
+#[derive(Error, Debug)]
+enum RemoveError {}
 
-    file_manager.remove_files(&file_paths);
-    file_manager.remove_dirs(&dir_paths);
+impl Command for Remove {
+    fn run(&self) -> Result<()> {
+        let mut file_manager = FileManager::new();
+        let ResolvedPaths {
+            file_paths,
+            dir_paths,
+        } = resolve_paths(&self.paths);
 
-    Ok(())
+        file_manager.remove_files(&file_paths);
+        file_manager.remove_dirs(&dir_paths);
+
+        Ok(())
+    }
 }

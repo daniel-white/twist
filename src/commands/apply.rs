@@ -2,15 +2,19 @@ use anyhow::Result;
 use structopt::StructOpt;
 use thiserror::Error;
 
+use super::Command;
+
 #[derive(Debug, StructOpt)]
-pub struct ApplyOpt {}
+pub struct Apply {}
 
 #[derive(Error, Debug)]
-enum Error {
+enum ApplyError {
     #[error("apply is not implemented")]
     NotImplemented,
 }
 
-pub fn run_apply(_opt: ApplyOpt, _profile: &str) -> Result<()> {
-    Err(Error::NotImplemented)?
+impl Command for Apply {
+    fn run(&self) -> Result<()> {
+        Err(ApplyError::NotImplemented)?
+    }
 }

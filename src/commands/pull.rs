@@ -2,15 +2,19 @@ use anyhow::Result;
 use structopt::StructOpt;
 use thiserror::Error;
 
+use super::Command;
+
+#[derive(Debug, StructOpt)]
+pub struct Pull {}
+
 #[derive(Error, Debug)]
-enum Error {
+enum PullError {
     #[error("pull is not implemented")]
     NotImplemented,
 }
 
-#[derive(Debug, StructOpt)]
-pub struct Opt {}
-
-pub fn run(_opt: Opt, _profile: &str) -> Result<()> {
-    Err(Error::NotImplemented)?
+impl Command for Pull {
+    fn run(&self) -> Result<()> {
+        Err(PullError::NotImplemented)?
+    }
 }
