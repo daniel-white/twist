@@ -4,7 +4,7 @@ use anyhow::Result;
 use log::info;
 use thiserror::Error;
 
-use crate::DEFAULT_PROFILE;
+use crate::consts::DEFAULT_PROFILE;
 
 #[derive(Debug, Error)]
 pub enum ProfileError {
