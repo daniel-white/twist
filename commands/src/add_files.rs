@@ -5,9 +5,9 @@ use thiserror::Error;
 use twist_shared::commands::AddFilesArgs;
 
 #[derive(Error, Debug)]
-enum AddError {}
+enum AddFilesError {}
 
-pub fn run(args: AddFilesArgs) -> Result<()> {
+pub fn add_files(args: AddFilesArgs) -> Result<()> {
     // let _repository = Repository::open(repo_dir())?;
     // let mut file_manager = FileManager::new();
     let ResolvedPaths {

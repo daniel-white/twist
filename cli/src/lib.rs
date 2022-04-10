@@ -40,8 +40,21 @@ enum CliCommand {
     )]
     AddFiles(AddFilesCliArgs),
 
+    #[clap(
+        about = "Removes the given files and directories from the dotfiles repository",
+        name = "remove",
+        alias = "rm"
+    )]
+    RemoveFiles(RemoveFilesCliArgs),
+
     #[clap(about = "Applies the dotfiles to the current system", name = "apply")]
     ApplyFiles(ApplyFilesCliArgs),
+
+    #[clap(
+        about = "Updates the dotfiles repository from the current system",
+        name = "update"
+    )]
+    UpdateRepository(UpdateRepositoryCliArgs),
 
     #[clap(about = "Initializes the dotfiles repository")]
     Init(InitCliArgs),
@@ -51,19 +64,6 @@ enum CliCommand {
 
     #[clap(about = "Pushes the dotfiles to the remote repository", name = "push")]
     PushToRemote(PushToRemoteCliArgs),
-
-    #[clap(
-        about = "Removes the given files and directories from the dotfiles repository",
-        name = "remove",
-        alias = "rm"
-    )]
-    RemoveFiles(RemoveFilesCliArgs),
-
-    #[clap(
-        about = "Updates the dotfiles repository from the current system",
-        name = "update"
-    )]
-    UpdateRepository(UpdateRepositoryCliArgs),
 }
 
 impl Cli {
@@ -77,9 +77,20 @@ impl Cli {
                 message: args.message,
                 paths: args.paths,
             }),
+            CliCommand::RemoveFiles(args) => Command::RemoveFiles(RemoveFilesArgs {
+                root_dir,
+                profile: self.profile,
+                message: args.message,
+                paths: args.paths,
+            }),
             CliCommand::ApplyFiles(args) => Command::ApplyFiles(ApplyFilesArgs {
                 root_dir,
                 profile: self.profile,
+            }),
+            CliCommand::UpdateRepository(args) => Command::UpdateRepository(UpdateRepositoryArgs {
+                root_dir,
+                profile: self.profile,
+                message: args.message,
             }),
             CliCommand::Init(args) => Command::Init(InitArgs {
                 root_dir,
@@ -92,17 +103,6 @@ impl Cli {
             CliCommand::PushToRemote(args) => Command::PushToRemote(PushToRemoteArgs {
                 root_dir,
                 profile: self.profile,
-            }),
-            CliCommand::RemoveFiles(args) => Command::RemoveFiles(RemoveFilesArgs {
-                root_dir,
-                profile: self.profile,
-                message: args.message,
-                paths: args.paths,
-            }),
-            CliCommand::UpdateRepository(args) => Command::UpdateRepository(UpdateRepositoryArgs {
-                root_dir,
-                profile: self.profile,
-                message: args.message,
             }),
         };
 

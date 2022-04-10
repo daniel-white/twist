@@ -638,6 +638,7 @@ dependencies = [
  "thiserror",
  "toml",
  "twist_cli",
+ "twist_commands",
  "twist_fs",
  "twist_shared",
 ]
@@ -651,6 +652,17 @@ dependencies = [
  "dirs",
  "simplelog",
  "thiserror",
+ "twist_shared",
+]
+
+[[package]]
+name = "twist_commands"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "thiserror",
+ "twist_fs",
  "twist_shared",
 ]
 

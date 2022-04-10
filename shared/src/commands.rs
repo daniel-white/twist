@@ -3,12 +3,12 @@ use std::path::PathBuf;
 #[derive(Debug)]
 pub enum Command {
     AddFiles(AddFilesArgs),
+    RemoveFiles(RemoveFilesArgs),
     ApplyFiles(ApplyFilesArgs),
+    UpdateRepository(UpdateRepositoryArgs),
     Init(InitArgs),
     PullFromRemote(PullFromRemoteArgs),
     PushToRemote(PushToRemoteArgs),
-    RemoveFiles(RemoveFilesArgs),
-    UpdateRepository(UpdateRepositoryArgs),
 }
 
 #[derive(Debug)]

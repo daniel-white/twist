@@ -1,4 +1,4 @@
-use std::fs::{canonicalize, metadata};
+use std::fs::metadata;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -7,7 +7,7 @@ use thiserror::Error;
 use twist_shared::ROOT_DIR_NAME;
 
 #[derive(Debug, Error)]
-pub enum RootDirError {
+enum RootDirError {
     #[error("could not find home directory to use as root directory")]
     HomeDirNotFoundError,
     #[error("the requested root directory is not a directory: {0}")]

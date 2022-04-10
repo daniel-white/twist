@@ -3,26 +3,20 @@
 // pub mod data;
 // pub mod fs;
 
-mod commands;
-
 use anyhow::Result;
 use twist_cli::init as init_cli;
 
 // use data::switch_profile;
-use commands::add::run;
+
 use log::{debug, error};
 use std::process::exit;
-use twist_shared::commands::Command;
+use twist_commands::run_command;
 
 fn main() -> Result<()> {
     let cmd = init_cli()?;
     debug!("Command: {:?}", cmd);
+    run_command(cmd)
 
-    if let Command::AddFiles(addFiles) = cmd {
-        run(addFiles);
-    }
-
-    Ok(())
     // match  {
     //     Ok(args) => {
     //         println!("{:?}", args);
