@@ -648,6 +648,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "dirs",
  "simplelog",
  "thiserror",
  "twist_shared",

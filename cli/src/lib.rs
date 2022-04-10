@@ -1,6 +1,7 @@
 #![feature(bool_to_option)]
 
 mod logging;
+mod path;
 
 use std::path::PathBuf;
 
@@ -8,11 +9,12 @@ use anyhow::Result;
 use clap::{Args, IntoApp, Parser, Subcommand};
 
 use logging::init as init_logging;
+use path::root_dir;
 use twist_shared::commands::{
     AddFilesArgs, ApplyFilesArgs, Command, InitArgs, PullFromRemoteArgs, PushToRemoteArgs,
     RemoveFilesArgs, UpdateRepositoryArgs,
 };
-use twist_shared::{DEFAULT_PROFILE, PROFILE_ENV};
+use twist_shared::{DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV};
 
 #[derive(Debug, Parser)]
 #[clap(about = "A tool for managing your dotfiles with a twist")]
@@ -20,8 +22,11 @@ struct Cli {
     #[clap(subcommand)]
     pub command: CliCommand,
 
-    #[clap(global = true, long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE)]
+    #[clap(global = true, long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE, help = "Set the profile used")]
     pub profile: String,
+
+    #[clap(global = true, long = "root-dir", env = ROOT_DIR_ENV, help = "Override the default root directory")]
+    pub root_dir_override: Option<PathBuf>,
 
     #[clap(global = true, long, short, help = "Enable verbose logging")]
     pub verbose: bool,
@@ -61,44 +66,55 @@ enum CliCommand {
     UpdateRepository(UpdateRepositoryCliArgs),
 }
 
-impl Into<Command> for Cli {
-    fn into(self) -> Command {
-        match self.command {
+impl Cli {
+    fn try_into(self) -> Result<Command> {
+        let root_dir = root_dir(self.root_dir_override)?;
+
+        let command = match self.command {
             CliCommand::AddFiles(args) => Command::AddFiles(AddFilesArgs {
+                root_dir,
                 profile: self.profile,
                 message: args.message,
                 paths: args.paths,
             }),
             CliCommand::ApplyFiles(args) => Command::ApplyFiles(ApplyFilesArgs {
+                root_dir,
                 profile: self.profile,
             }),
             CliCommand::Init(args) => Command::Init(InitArgs {
+                root_dir,
                 profile: self.profile,
             }),
             CliCommand::PullFromRemote(args) => Command::PullFromRemote(PullFromRemoteArgs {
+                root_dir,
                 profile: self.profile,
             }),
             CliCommand::PushToRemote(args) => Command::PushToRemote(PushToRemoteArgs {
+                root_dir,
                 profile: self.profile,
             }),
             CliCommand::RemoveFiles(args) => Command::RemoveFiles(RemoveFilesArgs {
+                root_dir,
                 profile: self.profile,
                 message: args.message,
                 paths: args.paths,
             }),
             CliCommand::UpdateRepository(args) => Command::UpdateRepository(UpdateRepositoryArgs {
+                root_dir,
                 profile: self.profile,
                 message: args.message,
             }),
-        }
+        };
+
+        Ok(command)
     }
 }
 
 pub fn init() -> Result<Command> {
     match Cli::try_parse() {
-        Ok(args) => {
-            init_logging(args.verbose)?;
-            Ok(args.into())
+        Ok(cli) => {
+            init_logging(cli.verbose)?;
+            cli.try_into()
         }
         Err(err) => Err(err.into()),
     }
