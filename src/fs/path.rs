@@ -6,19 +6,12 @@ use dirs::home_dir;
 use glob::{glob_with, MatchOptions};
 use thiserror::Error;
 
-use twist_shared::{DOTFILES_DIR_NAME, ROOT_DIR_NAME};
+use twist_shared::DOTFILES_DIR_NAME;
 
 #[derive(Debug, Error)]
 pub enum PathError {
     #[error("could not find home directory")]
     HomeDirNotFoundError,
-}
-
-pub fn root_dir() -> Result<PathBuf> {
-    match home_dir() {
-        Some(home_dir) => Ok(Path::new(&home_dir).join(ROOT_DIR_NAME)),
-        None => Err(PathError::HomeDirNotFoundError.into()),
-    }
 }
 
 pub fn repository_dir<P: AsRef<Path>>(p: P) -> PathBuf {

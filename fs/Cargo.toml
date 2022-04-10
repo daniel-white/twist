@@ -6,6 +6,10 @@ edition = "2021"
 [dependencies]
 twist_shared = { path = "../shared" }
 anyhow = "1.0"
+chrono = "0.4"
 dirs = "3.0"
+git2 = "0.13"
+log = "0.4"
+openssl = "0.10"
 glob = "0.3"
 thiserror = "1.0"

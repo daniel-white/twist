@@ -541,6 +541,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73473c0e59e6d5812c5dfe2a064a6444949f089e20eec9a2e5506596494e4623"
 
 [[package]]
+name = "subprocess"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "055cf3ebc2981ad8f0a5a17ef6652f652d87831f79fddcba2ac57bcb9a0aa407"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.91"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -628,19 +638,14 @@ dependencies = [
  "clap",
  "clap_complete",
  "clap_derive",
- "dirs",
  "git2",
- "glob",
  "log",
  "openssl",
  "rust-crypto",
- "simplelog",
  "thiserror",
  "toml",
  "twist_cli",
  "twist_commands",
- "twist_fs",
- "twist_shared",
 ]
 
 [[package]]
@@ -661,6 +666,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "log",
+ "subprocess",
  "thiserror",
  "twist_fs",
  "twist_shared",
@@ -671,8 +677,12 @@ name = "twist_fs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "chrono",
  "dirs",
+ "git2",
  "glob",
+ "log",
+ "openssl",
  "thiserror",
  "twist_shared",
 ]

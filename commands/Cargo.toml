@@ -9,3 +9,4 @@ twist_shared =  { path = "../shared" }
 anyhow = "1.0"
 log = "0.4"
 thiserror = "1.0"
+subprocess = "0.2"

@@ -1,5 +1,7 @@
+use std::path::Path;
+
 use anyhow::Result;
-use twist_fs::path::{resolve_paths, ResolvedPaths};
+use twist_fs::repository::Repository;
 
 use thiserror::Error;
 use twist_shared::commands::AddFilesArgs;
@@ -8,15 +10,21 @@ use twist_shared::commands::AddFilesArgs;
 enum AddFilesError {}
 
 pub fn add_files(args: AddFilesArgs) -> Result<()> {
-    // let _repository = Repository::open(repo_dir())?;
-    // let mut file_manager = FileManager::new();
-    let ResolvedPaths {
-        file_paths,
-        dir_paths,
-    } = resolve_paths(&args.paths)?;
+    let _repository = Repository::open(args.root_dir)?;
 
-    println!("file_paths: {:?}", file_paths);
-    println!("dir_paths: {:?}", dir_paths);
+    _repository.add_file(
+        args.paths.first().unwrap(),
+        Path::new(args.paths.first().unwrap()).file_name().unwrap(),
+    )?;
+    _repository.commit(args.message.unwrap().as_str())?;
+    // let mut file_manager = FileManager::new();
+    // let ResolvedPaths {
+    //     file_paths,
+    //     dir_paths,
+    // } = resolve_paths(&args.paths)?;
+
+    // println!("file_paths: {:?}", file_paths);
+    // println!("dir_paths: {:?}", dir_paths);
 
     // file_manager.add_files(&file_paths);
     // file_manager.add_dirs(&dir_paths);

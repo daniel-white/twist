@@ -1,7 +1,8 @@
-use std::path::PathBuf;
+use std::{collections::VecDeque, ffi::OsString, path::PathBuf};
 
 #[derive(Debug)]
 pub enum Command {
+    ExecGit(ExecGitArgs),
     AddFiles(AddFilesArgs),
     RemoveFiles(RemoveFilesArgs),
     ApplyFiles(ApplyFilesArgs),
@@ -9,6 +10,12 @@ pub enum Command {
     Init(InitArgs),
     PullFromRemote(PullFromRemoteArgs),
     PushToRemote(PushToRemoteArgs),
+}
+
+#[derive(Debug)]
+pub struct ExecGitArgs {
+    pub root_dir: PathBuf,
+    pub args: Vec<OsString>,
 }
 
 #[derive(Debug)]

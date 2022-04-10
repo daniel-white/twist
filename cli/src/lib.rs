@@ -3,6 +3,7 @@
 mod logging;
 mod path;
 
+use std::ffi::OsString;
 use std::path::PathBuf;
 
 use anyhow::Result;
@@ -11,29 +12,35 @@ use clap::{Args, IntoApp, Parser, Subcommand};
 use logging::init as init_logging;
 use path::root_dir;
 use twist_shared::commands::{
-    AddFilesArgs, ApplyFilesArgs, Command, InitArgs, PullFromRemoteArgs, PushToRemoteArgs,
-    RemoveFilesArgs, UpdateRepositoryArgs,
+    AddFilesArgs, ApplyFilesArgs, Command, ExecGitArgs, InitArgs, PullFromRemoteArgs,
+    PushToRemoteArgs, RemoveFilesArgs, UpdateRepositoryArgs,
 };
 use twist_shared::{DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV};
 
 #[derive(Debug, Parser)]
-#[clap(about = "A tool for managing your dotfiles with a twist")]
+#[clap(
+    about = "A tool for managing your dotfiles with a twist",
+    allow_missing_positional = true
+)]
 struct Cli {
     #[clap(subcommand)]
     pub command: CliCommand,
 
-    #[clap(global = true, long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE, help = "Set the profile used")]
+    #[clap(long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE, help = "Set the profile used")]
     pub profile: String,
 
     #[clap(global = true, long = "root-dir", env = ROOT_DIR_ENV, help = "Override the default root directory")]
     pub root_dir_override: Option<PathBuf>,
 
-    #[clap(global = true, long, short, help = "Enable verbose logging")]
+    #[clap(long, short, help = "Enable verbose logging")]
     pub verbose: bool,
 }
 
 #[derive(Debug, Subcommand)]
 enum CliCommand {
+    #[clap(about = "Executes git in the root directory", name = "git")]
+    ExecGit(ExecGitCliArgs),
+
     #[clap(
         about = "Adds the given files and directories to the dotfiles repository",
         name = "add"
@@ -71,6 +78,10 @@ impl Cli {
         let root_dir = root_dir(self.root_dir_override)?;
 
         let command = match self.command {
+            CliCommand::ExecGit(args) => Command::ExecGit(ExecGitArgs {
+                root_dir,
+                args: args.args,
+            }),
             CliCommand::AddFiles(args) => Command::AddFiles(AddFilesArgs {
                 root_dir,
                 profile: self.profile,
@@ -122,6 +133,15 @@ pub fn init() -> Result<Command> {
 
 pub fn into_command() -> clap::Command<'static> {
     Cli::command()
+}
+
+#[derive(Debug, Args)]
+struct ExecGitCliArgs {
+    #[clap(long, short = 'm')]
+    message: Option<String>,
+
+    #[clap(parse(from_os_str))]
+    args: Vec<OsString>,
 }
 
 #[derive(Debug, Args)]
