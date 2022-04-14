@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, ffi::OsString, path::PathBuf};
+use std::{ffi::OsString, path::PathBuf};
 
 #[derive(Debug)]
 pub enum Command {

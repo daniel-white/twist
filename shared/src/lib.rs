@@ -1,5 +1,3 @@
-#![feature(bool_to_option)]
-
 pub mod commands;
 
 pub const DEFAULT_PROFILE: &str = "main";

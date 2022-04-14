@@ -9,15 +9,19 @@ pub enum LoggingError {
 }
 
 pub fn init(verbose: bool) -> Result<()> {
+    let log_level = if verbose {
+        LevelFilter::Debug
+    } else {
+        LevelFilter::Info
+    };
+
     TermLogger::init(
-        verbose
-            .then_some(LevelFilter::Debug)
-            .unwrap_or(LevelFilter::Info),
+        log_level,
         ConfigBuilder::new()
             .set_time_level(LevelFilter::Off)
             .build(),
         TerminalMode::Mixed,
         ColorChoice::Auto,
     )
-    .or(Err(LoggingError::InitFailed.into()))
+    .map_err(|_| LoggingError::InitFailed.into())
 }

@@ -15,10 +15,8 @@ enum RootDirError {
 }
 
 pub fn root_dir(root_dir_override: Option<PathBuf>) -> Result<PathBuf> {
-    let root_dir = root_dir_override.or_else(|| match home_dir() {
-        Some(home_dir) => Some(Path::new(&home_dir).join(ROOT_DIR_NAME).to_path_buf()),
-        None => None,
-    });
+    let root_dir = root_dir_override
+        .or_else(|| home_dir().map(|home_dir| Path::new(&home_dir).join(ROOT_DIR_NAME)));
 
     match root_dir {
         Some(root_dir) => match metadata(&root_dir) {

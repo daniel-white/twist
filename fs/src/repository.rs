@@ -1,12 +1,11 @@
 use std::ffi::OsStr;
-use std::fs::{copy, create_dir_all, metadata};
+use std::fs::copy;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use chrono::prelude::*;
 use git2::{
-    BranchType as GitBranchType, Error, ObjectType, Repository as GitRepository,
-    RepositoryInitOptions as GitRepositoryInitOptions,
+    ObjectType, Repository as GitRepository, RepositoryInitOptions as GitRepositoryInitOptions,
 };
 use log::debug;
 use thiserror::Error;
@@ -15,40 +14,19 @@ use twist_shared::DOTFILES_DIR_NAME;
 
 #[derive(Error, Debug)]
 enum RepositoryError {
-    #[error("failed to initialize the repository: {0}")]
-    InitializationError(anyhow::Error),
-
     #[error("failed to open repository: {0}")]
-    InitializeGitError(anyhow::Error),
+    InitializeGit(anyhow::Error),
 
     #[error("failed to create index: {0}")]
-    CreateIndexError(anyhow::Error),
+    CreateIndex(anyhow::Error),
 
-    #[error("failed switch profile: {0}")]
-    SwitchProfileError(anyhow::Error),
+    // #[error("failed switch profile: {0}")]
+    // SwitchProfile(anyhow::Error),
 
-    #[error("repository path ({0}) is not a directory")]
-    NotADirectoryError(PathBuf),
-
+    // #[error("repository path ({0}) is not a directory")]
+    // NotADirectory(PathBuf),
     #[error("unable to add file from {0}: {1}")]
-    AddFileError(PathBuf, anyhow::Error),
-}
-
-fn ensure_dir<P: AsRef<Path>>(p: P) -> Result<()> {
-    match metadata(&p) {
-        Ok(metadata) if (metadata.is_dir()) => {
-            debug!("the {} directory exists", p.as_ref().display());
-            Ok(())
-        }
-        Ok(_) => Err(RepositoryError::NotADirectoryError(
-            p.as_ref().clone().to_path_buf(),
-        ))?,
-        _ => {
-            debug!("creating {} directory", p.as_ref().display());
-            create_dir_all(&p)
-                .map_err(|err| RepositoryError::InitializationError(err.into()).into())
-        }
-    }
+    AddFile(PathBuf, anyhow::Error),
 }
 
 pub struct Repository {
@@ -76,7 +54,7 @@ impl Repository {
 
         let git_repository = match git_repository {
             Ok(git_repository) => git_repository,
-            Err(err) => Err(RepositoryError::InitializeGitError(err.into()))?,
+            Err(err) => return Err(RepositoryError::InitializeGit(err.into()).into()),
         };
 
         debug!(
@@ -94,7 +72,7 @@ impl Repository {
         let mut git_index = self
             .git_repository
             .index()
-            .map_err(|err| RepositoryError::CreateIndexError(err.into()))?;
+            .map_err(|err| RepositoryError::CreateIndex(err.into()))?;
 
         for (src_path, dest_name) in paths {
             let dest_path = self.repository_dir.join(dest_name);
@@ -105,7 +83,7 @@ impl Repository {
             );
 
             copy(&src_path, &dest_path).map_err(|err| {
-                RepositoryError::AddFileError(src_path.as_ref().to_path_buf(), err.into())
+                RepositoryError::AddFile(src_path.as_ref().to_path_buf(), err.into())
             })?;
 
             git_index.add_path(dest_path.strip_prefix(&self.repository_dir)?)?;

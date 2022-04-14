@@ -1,5 +1,3 @@
-#![feature(bool_to_option)]
-
 mod logging;
 mod path;
 
@@ -94,7 +92,7 @@ impl Cli {
                 message: args.message,
                 paths: args.paths,
             }),
-            CliCommand::ApplyFiles(args) => Command::ApplyFiles(ApplyFilesArgs {
+            CliCommand::ApplyFiles(_args) => Command::ApplyFiles(ApplyFilesArgs {
                 root_dir,
                 profile: self.profile,
             }),
@@ -103,15 +101,15 @@ impl Cli {
                 profile: self.profile,
                 message: args.message,
             }),
-            CliCommand::Init(args) => Command::Init(InitArgs {
+            CliCommand::Init(_args) => Command::Init(InitArgs {
                 root_dir,
                 profile: self.profile,
             }),
-            CliCommand::PullFromRemote(args) => Command::PullFromRemote(PullFromRemoteArgs {
+            CliCommand::PullFromRemote(_args) => Command::PullFromRemote(PullFromRemoteArgs {
                 root_dir,
                 profile: self.profile,
             }),
-            CliCommand::PushToRemote(args) => Command::PushToRemote(PushToRemoteArgs {
+            CliCommand::PushToRemote(_args) => Command::PushToRemote(PushToRemoteArgs {
                 root_dir,
                 profile: self.profile,
             }),

@@ -9,6 +9,6 @@ enum UpdateRepositoryError {
     NotImplementedError,
 }
 
-pub fn update_repository(args: UpdateRepositoryArgs) -> Result<()> {
-    Err(UpdateRepositoryError::NotImplementedError)?
+pub fn update_repository(_args: UpdateRepositoryArgs) -> Result<()> {
+    Err(UpdateRepositoryError::NotImplementedError.into())
 }

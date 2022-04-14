@@ -9,6 +9,6 @@ enum PushToRemoteError {
     NotImplementedError,
 }
 
-pub fn push_to_remote(args: PushToRemoteArgs) -> Result<()> {
-    Err(PushToRemoteError::NotImplementedError)?
+pub fn push_to_remote(_args: PushToRemoteArgs) -> Result<()> {
+    Err(PushToRemoteError::NotImplementedError.into())
 }

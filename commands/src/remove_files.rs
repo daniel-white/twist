@@ -7,7 +7,7 @@ use twist_shared::commands::RemoveFilesArgs;
 #[derive(Error, Debug)]
 enum RemoveFilesError {}
 
-pub fn remove_files(args: RemoveFilesArgs) -> Result<()> {
+pub fn remove_files(_args: RemoveFilesArgs) -> Result<()> {
     // // let _repository = Repository::open(repo_dir())?;
     // // let mut file_manager = FileManager::new();
     // let ResolvedPaths {

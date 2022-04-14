@@ -9,6 +9,6 @@ enum ApplyFilesError {
     NotImplementedError,
 }
 
-pub fn apply_files(args: ApplyFilesArgs) -> Result<()> {
-    Err(ApplyFilesError::NotImplementedError)?
+pub fn apply_files(_args: ApplyFilesArgs) -> Result<()> {
+    Err(ApplyFilesError::NotImplementedError.into())
 }

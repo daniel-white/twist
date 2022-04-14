@@ -32,14 +32,13 @@ pub fn exec_git(args: ExecGitArgs) -> Result<()> {
 
     let git_path = env::var(GIT_EXEC_PATH_ENV_VAR)
         .ok()
-        .or(Some(String::default()))
-        .and_then(|git_path| Some(Path::new(&git_path).join("git")))
+        .or_else(|| Some(String::default()))
+        .map(|p| Path::new(&p).join("git"))
         .unwrap();
 
     let mut git_args = vec![
         git_current_directory_flag.to_os_string(),
         Repository::repo_dir(args.root_dir)
-            .to_path_buf()
             .as_os_str()
             .to_os_string(),
     ];
@@ -63,13 +62,11 @@ struct SafeExecGitArgs(IntoIter<OsString>);
 
 impl SafeExecGitArgs {
     fn is_safe_arg(arg: &OsStr) -> bool {
-        return !Self::is_blocked_flag(arg);
+        !Self::is_blocked_flag(arg)
     }
 
     fn is_blocked_flag(arg: &OsStr) -> bool {
-        return arg == GIT_CURRENT_DIRECTORY_FLAG
-            || arg == GIT_WORK_TREE_FLAG
-            || arg == GIT_DIR_FLAG;
+        arg == GIT_CURRENT_DIRECTORY_FLAG || arg == GIT_WORK_TREE_FLAG || arg == GIT_DIR_FLAG
     }
 }
 

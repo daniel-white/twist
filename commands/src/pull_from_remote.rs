@@ -9,6 +9,6 @@ enum PullFromRemoteError {
     NotImplementedError,
 }
 
-pub fn pull_from_remote(args: PullFromRemoteArgs) -> Result<()> {
-    Err(PullFromRemoteError::NotImplementedError)?
+pub fn pull_from_remote(_args: PullFromRemoteArgs) -> Result<()> {
+    Err(PullFromRemoteError::NotImplementedError.into())
 }
