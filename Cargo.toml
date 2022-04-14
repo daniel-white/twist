@@ -17,7 +17,7 @@ edition = "2021"
 twist_cli =  { path = "./cli" }
 twist_commands =  { path = "./commands" }
 anyhow = "1.0"
-git2 = "0.13"
+git2 = "0.14"
 log = "0.4"
 openssl = "0.10"
 thiserror = "1.0"
