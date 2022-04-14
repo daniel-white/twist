@@ -1,5 +1,4 @@
 pub mod manager;
-pub mod paths;
 pub mod repository;
 
 use std::fs::{create_dir_all, metadata};
