@@ -601,7 +601,6 @@ dependencies = [
  "git2",
  "log",
  "openssl",
- "shadow-rs",
  "thiserror",
  "toml",
  "twist_cli",

@@ -68,7 +68,7 @@ enum CliCommand {
     )]
     UpdateRepository(UpdateRepositoryCliArgs),
 
-    #[clap(about = "Initializes the dotfiles repository")]
+    #[clap(about = "Initializes the dotfiles repository", bin_name = "twist")]
     Init(InitCliArgs),
 
     #[clap(about = "Pulls the dotfiles from the remote repository", name = "pull")]
@@ -136,7 +136,7 @@ pub fn init() -> Result<Command> {
     }
 }
 
-pub fn into_command() -> clap::Command<'static> {
+pub fn cli() -> clap::Command<'static> {
     Cli::command()
 }
 
