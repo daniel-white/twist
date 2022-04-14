@@ -69,7 +69,12 @@ jobs:
   # Ensure that the project could be successfully compiled
   cargo_check:
     name: Compile
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macOS-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v3
@@ -91,7 +96,12 @@ jobs:
   cargo_check_all_features:
     name: Compile with all features enabled
     needs: cargo_check
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macOS-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v3
