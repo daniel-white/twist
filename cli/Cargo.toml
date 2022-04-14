@@ -2,8 +2,7 @@
 name = "twist_cli"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+build = "./build.rs"
 
 [dependencies]
 twist_shared = { path = "../shared" }
@@ -12,3 +11,7 @@ clap = { version = "3.1", features = ["derive", "env"] }
 dirs = "4.0"
 simplelog = "0.11"
 thiserror = "1.0"
+shadow-rs = "0.11.0"
+
+[build-dependencies]
+shadow-rs = "0.11.0"

@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate shadow_rs;
+
 mod logging;
 mod path;
 
@@ -15,9 +18,13 @@ use twist_shared::commands::{
 };
 use twist_shared::{DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV};
 
+shadow!(shadow);
+
 #[derive(Debug, Parser)]
 #[clap(
     about = "A tool for managing your dotfiles with a twist",
+    version=shadow::PKG_VERSION,
+    long_version=shadow::CLAP_LONG_VERSION,
     allow_missing_positional = true
 )]
 struct Cli {
