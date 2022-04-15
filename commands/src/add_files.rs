@@ -1,7 +1,10 @@
 use std::path::Path;
 
 use anyhow::Result;
-use twist_fs::repository::Repository;
+use twist_fs::{
+    path::Paths,
+    repository::{git::GitRepository, Repository},
+};
 
 use thiserror::Error;
 use twist_shared::commands::AddFilesArgs;
@@ -10,7 +13,8 @@ use twist_shared::commands::AddFilesArgs;
 enum AddFilesError {}
 
 pub fn add_files(args: AddFilesArgs) -> Result<()> {
-    let _repository = Repository::open(args.root_dir)?;
+    let paths = Paths::new(args.root_dir);
+    let _repository = GitRepository::open(&paths)?;
 
     _repository.add_file(
         args.paths.first().unwrap(),

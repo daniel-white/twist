@@ -10,7 +10,7 @@ use anyhow::Result;
 use log::{debug, warn};
 use subprocess::Exec;
 use thiserror::Error;
-use twist_fs::repository::Repository;
+use twist_fs::path::Paths;
 use twist_shared::commands::ExecGitArgs;
 
 #[derive(Error, Debug)]
@@ -28,6 +28,7 @@ const GIT_DIR_FLAG: &str = "--git-dir";
 const GIT_EXEC_PATH_ENV_VAR: &str = "GIT_EXEC_PATH";
 
 pub fn exec_git(args: ExecGitArgs) -> Result<()> {
+    let paths = Paths::new(args.root_dir);
     let git_current_directory_flag = OsStr::new(GIT_CURRENT_DIRECTORY_FLAG);
 
     let git_path = env::var(GIT_EXEC_PATH_ENV_VAR)
@@ -38,9 +39,7 @@ pub fn exec_git(args: ExecGitArgs) -> Result<()> {
 
     let mut git_args = vec![
         git_current_directory_flag.to_os_string(),
-        Repository::repo_dir(args.root_dir)
-            .as_os_str()
-            .to_os_string(),
+        OsString::from(&paths.repo_dir),
     ];
 
     let mut safe_git_args: Vec<_> = SafeExecGitArgs::from(args.args).collect();

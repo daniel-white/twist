@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
 use twist_shared::DOTFILES_DIR_NAME;
 
@@ -8,13 +11,13 @@ pub struct Paths {
 }
 
 impl Paths {
-    pub fn new<P: AsRef<Path>>(root_dir: P) -> Self {
+    pub fn new<P: AsRef<Path>>(root_dir: P) -> Rc<Self> {
         let root_dir = root_dir.as_ref();
 
-        Paths {
+        Rc::new(Paths {
             root_dir: root_dir.to_path_buf(),
             repo_dir: root_dir.to_path_buf().join(DOTFILES_DIR_NAME),
-        }
+        })
     }
 }
 

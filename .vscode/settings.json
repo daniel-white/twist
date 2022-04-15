@@ -5,11 +5,14 @@
   "cSpell.words": [
     "canonicalize",
     "dotfiles",
+    "ROOTDIR",
     "simplelog",
     "structopt",
     "subcommand",
     "thiserror"
   ],
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "rust-analyzer.cargo.allFeatures": true,
   "[rust]": {
     "editor.defaultFormatter": "matklad.rust-analyzer"
   }

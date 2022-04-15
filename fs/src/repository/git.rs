@@ -1,16 +1,20 @@
 use std::ffi::OsStr;
 use std::fs::copy;
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 use anyhow::Result;
 use chrono::prelude::*;
 use git2::{
-    ObjectType, Repository as GitRepository, RepositoryInitOptions as GitRepositoryInitOptions,
+    ObjectType as LibGitObjectType, Repository as LibGitRepository,
+    RepositoryInitOptions as LibGitRepositoryInitOptions,
 };
 use log::debug;
 use thiserror::Error;
 
-use twist_shared::DOTFILES_DIR_NAME;
+use crate::path::Paths;
+
+use super::Repository;
 
 #[derive(Error, Debug)]
 enum RepositoryError {
@@ -29,26 +33,21 @@ enum RepositoryError {
     AddFile(PathBuf, anyhow::Error),
 }
 
-pub struct Repository {
-    repository_dir: PathBuf,
-    git_repository: GitRepository,
+pub struct GitRepository {
+    paths: Rc<Paths>,
+    git_repository: LibGitRepository,
 }
 
-impl Repository {
-    pub fn repo_dir<P: AsRef<Path>>(root_dir: P) -> PathBuf {
-        root_dir.as_ref().join(DOTFILES_DIR_NAME)
-    }
+impl Repository for GitRepository {
+    fn open(paths: &Rc<Paths>) -> Result<GitRepository> {
+        debug!("opening repository at {:?}", paths.repo_dir);
 
-    pub fn open<P: AsRef<Path>>(root_dir: P) -> Result<Repository> {
-        let repository_dir = Self::repo_dir(root_dir);
-        debug!("opening repository at {}", repository_dir.display());
-
-        let git_repository = match GitRepository::open(&repository_dir) {
+        let git_repository = match LibGitRepository::open(&paths.repo_dir) {
             Ok(git_repository) => Ok(git_repository),
             Err(_) => {
-                let mut opts = GitRepositoryInitOptions::new();
+                let mut opts = LibGitRepositoryInitOptions::new();
                 let opts = opts.mkdir(true);
-                GitRepository::init_opts(&repository_dir, opts)
+                LibGitRepository::init_opts(&paths.repo_dir, opts)
             }
         };
 
@@ -57,25 +56,22 @@ impl Repository {
             Err(err) => return Err(RepositoryError::InitializeGit(err.into()).into()),
         };
 
-        debug!(
-            "successfully opened repository at {}",
-            repository_dir.display()
-        );
+        debug!("successfully opened repository at {:?}", paths.repo_dir);
 
-        Ok(Repository {
-            repository_dir,
+        Ok(GitRepository {
+            paths: paths.clone(),
             git_repository,
         })
     }
 
-    pub fn add_files<P: AsRef<Path>>(&self, paths: &[(P, &OsStr)]) -> Result<()> {
+    fn add_files<P: AsRef<Path>>(&self, paths: &[(P, &OsStr)]) -> Result<()> {
         let mut git_index = self
             .git_repository
             .index()
             .map_err(|err| RepositoryError::CreateIndex(err.into()))?;
 
         for (src_path, dest_name) in paths {
-            let dest_path = self.repository_dir.join(dest_name);
+            let dest_path = self.paths.repo_dir.join(dest_name);
             debug!(
                 "adding {} as {}",
                 src_path.as_ref().display(),
@@ -86,7 +82,7 @@ impl Repository {
                 RepositoryError::AddFile(src_path.as_ref().to_path_buf(), err.into())
             })?;
 
-            git_index.add_path(dest_path.strip_prefix(&self.repository_dir)?)?;
+            git_index.add_path(dest_path.strip_prefix(&self.paths.repo_dir)?)?;
         }
 
         git_index.write()?;
@@ -96,11 +92,7 @@ impl Repository {
         Ok(())
     }
 
-    pub fn add_file<P: AsRef<Path>>(&self, src_path: P, dest_name: &OsStr) -> Result<()> {
-        self.add_files(&[(src_path, dest_name)])
-    }
-
-    pub fn commit(&self, message: &str) -> Result<(), git2::Error> {
+    fn commit(&self, message: &str) -> Result<()> {
         let now: DateTime<Local> = Local::now();
         let mut git_index = self.git_repository.index()?;
         let tree = git_index.write_tree()?;
@@ -114,7 +106,7 @@ impl Repository {
             .git_repository
             .head()?
             .resolve()?
-            .peel(ObjectType::Commit)
+            .peel(LibGitObjectType::Commit)
             .and_then(|obj| {
                 obj.into_commit()
                     .map_err(|_| git2::Error::from_str("Couldn't find commit"))
