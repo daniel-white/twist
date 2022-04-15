@@ -13,3 +13,6 @@ log = "0.4"
 openssl = "0.10"
 glob = "0.3"
 thiserror = "1.0"
+
+[dev-dependencies]
+faux = "^0.1"

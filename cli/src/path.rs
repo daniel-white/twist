@@ -9,9 +9,9 @@ use twist_shared::ROOT_DIR_NAME;
 #[derive(Debug, Error)]
 enum RootDirError {
     #[error("could not find home directory to use as root directory")]
-    HomeDirNotFoundError,
+    HomeDirNotFound,
     #[error("the requested root directory is not a directory: {0}")]
-    NotADirectoryError(PathBuf),
+    NotADirectory(PathBuf),
 }
 
 pub fn root_dir(root_dir_override: Option<PathBuf>) -> Result<PathBuf> {
@@ -22,8 +22,8 @@ pub fn root_dir(root_dir_override: Option<PathBuf>) -> Result<PathBuf> {
         Some(root_dir) => match metadata(&root_dir) {
             Err(_) => Ok(root_dir),
             Ok(metadata) if metadata.is_dir() => Ok(root_dir),
-            _ => Err(RootDirError::NotADirectoryError(root_dir).into()),
+            _ => Err(RootDirError::NotADirectory(root_dir).into()),
         },
-        None => Err(RootDirError::HomeDirNotFoundError.into()),
+        None => Err(RootDirError::HomeDirNotFound.into()),
     }
 }
