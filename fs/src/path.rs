@@ -1,8 +1,11 @@
 use std::{
+    fs::{create_dir_all, metadata},
     path::{Component, Path, PathBuf},
     rc::Rc,
 };
 
+use dirs::home_dir;
+use log::debug;
 use twist_shared::{CONFIG_FILE_NAME, FILES_DIR_NAME};
 
 const HOME_DIR_PREFIX: &str = "~";
@@ -10,6 +13,7 @@ const HOME_DIR_MAP_NAME: &str = "home";
 const HIDDEN_FILE_PREFIX: &str = ".";
 
 pub struct Paths {
+    pub home_dir: PathBuf,
     pub root_dir: PathBuf,
     pub files_dir: PathBuf,
     pub config_file: PathBuf,
@@ -22,6 +26,7 @@ impl Paths {
         let config_file = root_dir.join(CONFIG_FILE_NAME);
 
         Rc::new(Paths {
+            home_dir: home_dir().unwrap(),
             root_dir,
             files_dir,
             config_file,
@@ -34,6 +39,12 @@ impl Paths {
         if p.starts_with(&self.root_dir) {
             return None;
         }
+
+        let p = if p.starts_with(&self.home_dir) {
+            Path::new(HOME_DIR_PREFIX).join(p.strip_prefix(&self.home_dir).unwrap())
+        } else {
+            p.to_path_buf()
+        };
 
         let mut path = self.files_dir.clone();
         for p in p.components() {
@@ -57,6 +68,15 @@ impl Paths {
         }
 
         Some(path)
+    }
+
+    pub fn ensure_parent_dir<P: AsRef<Path>>(p: P) {
+        let p = p.as_ref().parent().unwrap();
+        debug!("ensure_parent_dir: {:?}", p);
+        match metadata(&p) {
+            Ok(metadata) if (metadata.is_file()) => panic!("file exists"),
+            _ => create_dir_all(&p).unwrap(),
+        }
     }
 }
 

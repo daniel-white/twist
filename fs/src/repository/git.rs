@@ -1,6 +1,5 @@
-use std::ffi::OsStr;
 use std::fs::copy;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use anyhow::Result;
@@ -38,8 +37,8 @@ pub struct GitRepository {
     git_repository: LibGitRepository,
 }
 
-impl Repository for GitRepository {
-    fn open(paths: &Rc<Paths>) -> Result<GitRepository> {
+impl GitRepository {
+    pub fn open(paths: &Rc<Paths>) -> Result<Rc<dyn Repository>> {
         debug!("opening repository at {:?}", paths.root_dir);
 
         let git_repository = match LibGitRepository::open(&paths.root_dir) {
@@ -58,31 +57,31 @@ impl Repository for GitRepository {
 
         debug!("successfully opened repository at {:?}", paths.root_dir);
 
-        Ok(GitRepository {
+        Ok(Rc::new(GitRepository {
             paths: paths.clone(),
             git_repository,
-        })
+        }))
     }
+}
 
-    fn add_files<P: AsRef<Path>>(&self, paths: &[(P, &OsStr)]) -> Result<()> {
+impl Repository for GitRepository {
+    fn add_files(&self, paths: &[(PathBuf, PathBuf)]) -> Result<()> {
         let mut git_index = self
             .git_repository
             .index()
             .map_err(|err| RepositoryError::CreateIndex(err.into()))?;
 
-        for (src_path, dest_name) in paths {
-            let dest_path = self.paths.files_dir.join(dest_name);
-            debug!(
-                "adding {} as {}",
-                src_path.as_ref().display(),
-                dest_path.display()
-            );
+        for (src_path, dest_path) in paths {
+            debug!("adding {:?} as {:?}", src_path, dest_path);
 
-            copy(&src_path, &dest_path).map_err(|err| {
-                RepositoryError::AddFile(src_path.as_ref().to_path_buf(), err.into())
-            })?;
+            Paths::ensure_parent_dir(&dest_path);
 
-            git_index.add_path(dest_path.strip_prefix(&self.paths.files_dir)?)?;
+            copy(&src_path, &dest_path)
+                .map_err(|err| RepositoryError::AddFile(src_path.to_path_buf(), err.into()))?;
+
+            let index_path = dest_path.strip_prefix(&self.paths.root_dir)?;
+
+            git_index.add_path(index_path)?;
         }
 
         git_index.write()?;
