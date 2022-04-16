@@ -52,10 +52,6 @@ impl Paths {
                         panic!("invalid path component: {:?}", c);
                     }
                 },
-                Component::CurDir => {}
-                Component::ParentDir => {
-                    path = path.parent().unwrap().to_path_buf();
-                }
                 _ => {}
             }
         }
