@@ -2,7 +2,7 @@ use anyhow::Result;
 use twist_fs::{file_manager::FileManager, path::Paths, repository::git::GitRepository};
 
 use thiserror::Error;
-use twist_shared::commands::AddFilesArgs;
+use twist_shared::{commands::AddFilesArgs, config::test_write};
 
 #[derive(Error, Debug)]
 enum AddFilesError {}
@@ -12,6 +12,8 @@ pub fn add_files(args: AddFilesArgs) -> Result<()> {
     let repository = GitRepository::open(&paths)?;
 
     let mut file_manager = FileManager::new(&paths, &repository);
+
+    test_write(&paths.config_file)?;
 
     file_manager.add_files(args.paths.as_slice())?;
     repository.commit(args.message.unwrap().as_str())?;
