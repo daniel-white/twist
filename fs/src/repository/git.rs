@@ -40,14 +40,14 @@ pub struct GitRepository {
 
 impl Repository for GitRepository {
     fn open(paths: &Rc<Paths>) -> Result<GitRepository> {
-        debug!("opening repository at {:?}", paths.repo_dir);
+        debug!("opening repository at {:?}", paths.root_dir);
 
-        let git_repository = match LibGitRepository::open(&paths.repo_dir) {
+        let git_repository = match LibGitRepository::open(&paths.root_dir) {
             Ok(git_repository) => Ok(git_repository),
             Err(_) => {
                 let mut opts = LibGitRepositoryInitOptions::new();
                 let opts = opts.mkdir(true);
-                LibGitRepository::init_opts(&paths.repo_dir, opts)
+                LibGitRepository::init_opts(&paths.root_dir, opts)
             }
         };
 
@@ -56,7 +56,7 @@ impl Repository for GitRepository {
             Err(err) => return Err(RepositoryError::InitializeGit(err.into()).into()),
         };
 
-        debug!("successfully opened repository at {:?}", paths.repo_dir);
+        debug!("successfully opened repository at {:?}", paths.root_dir);
 
         Ok(GitRepository {
             paths: paths.clone(),
@@ -71,7 +71,7 @@ impl Repository for GitRepository {
             .map_err(|err| RepositoryError::CreateIndex(err.into()))?;
 
         for (src_path, dest_name) in paths {
-            let dest_path = self.paths.repo_dir.join(dest_name);
+            let dest_path = self.paths.files_dir.join(dest_name);
             debug!(
                 "adding {} as {}",
                 src_path.as_ref().display(),
@@ -82,7 +82,7 @@ impl Repository for GitRepository {
                 RepositoryError::AddFile(src_path.as_ref().to_path_buf(), err.into())
             })?;
 
-            git_index.add_path(dest_path.strip_prefix(&self.paths.repo_dir)?)?;
+            git_index.add_path(dest_path.strip_prefix(&self.paths.files_dir)?)?;
         }
 
         git_index.write()?;

@@ -39,7 +39,7 @@ pub fn exec_git(args: ExecGitArgs) -> Result<()> {
 
     let mut git_args = vec![
         git_current_directory_flag.to_os_string(),
-        OsString::from(&paths.repo_dir),
+        OsString::from(&paths.files_dir),
     ];
 
     let mut safe_git_args: Vec<_> = SafeExecGitArgs::from(args.args).collect();
