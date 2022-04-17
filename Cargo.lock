@@ -617,8 +617,33 @@ dependencies = [
  "openssl",
  "thiserror",
  "toml",
- "twist_cli",
- "twist_commands",
+ "twist-cli",
+ "twist-commands",
+]
+
+[[package]]
+name = "twist-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "dirs",
+ "shadow-rs",
+ "simplelog",
+ "thiserror",
+ "twist-commands",
+ "twist-common",
+]
+
+[[package]]
+name = "twist-commands"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "log",
+ "subprocess",
+ "thiserror",
+ "twist-common",
 ]
 
 [[package]]
@@ -635,30 +660,6 @@ dependencies = [
  "serde",
  "thiserror",
  "toml",
-]
-
-[[package]]
-name = "twist_cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "dirs",
- "shadow-rs",
- "simplelog",
- "thiserror",
- "twist-common",
-]
-
-[[package]]
-name = "twist_commands"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "log",
- "subprocess",
- "thiserror",
- "twist-common",
 ]
 
 [[package]]

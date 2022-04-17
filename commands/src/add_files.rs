@@ -1,13 +1,15 @@
 use std::rc::Rc;
 
 use anyhow::Result;
+use thiserror::Error;
+
 use twist_common::{
+    config::toml::TomlConfig,
     files::{git::GitRepository, FileManager, Repository},
     path::Paths,
 };
 
-use thiserror::Error;
-use twist_common::{commands::AddFilesArgs, config::toml::TomlConfig};
+use crate::AddFilesArgs;
 
 #[derive(Error, Debug)]
 enum AddFilesError {}

@@ -12,7 +12,7 @@ use clap::{Args, IntoApp, Parser, Subcommand};
 
 use logging::init as init_logging;
 use path::root_dir;
-use twist_common::commands::{
+use twist_commands::{
     AddFilesArgs, ApplyFilesArgs, Command, ExecGitArgs, InitArgs, PullFromRemoteArgs,
     PushToRemoteArgs, RemoveFilesArgs, UpdateRepositoryArgs,
 };

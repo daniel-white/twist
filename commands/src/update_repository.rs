@@ -1,7 +1,7 @@
 use anyhow::Result;
-
 use thiserror::Error;
-use twist_common::commands::UpdateRepositoryArgs;
+
+use crate::UpdateRepositoryArgs;
 
 #[derive(Error, Debug)]
 enum UpdateRepositoryError {

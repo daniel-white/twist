@@ -6,11 +6,13 @@ use std::{
 };
 
 use anyhow::Result;
-
 use log::{debug, warn};
 use subprocess::Exec;
 use thiserror::Error;
-use twist_common::{commands::ExecGitArgs, path::Paths};
+
+use twist_common::path::Paths;
+
+use crate::ExecGitArgs;
 
 #[derive(Error, Debug)]
 enum ExecGitError {

@@ -12,8 +12,8 @@ edition = "2021"
 build = "build.rs"
 
 [dependencies]
-twist_cli =  { path = "./cli" }
-twist_commands =  { path = "./commands" }
+twist-cli =  { path = "./cli" }
+twist-commands =  { path = "./commands" }
 anyhow = "1.0"
 git2 = "0.14"
 log = "0.4"
@@ -22,7 +22,7 @@ thiserror = "1.0"
 toml = "0.5"
 
 [build-dependencies]
-twist_cli =  { path = "./cli" }
+twist-cli =  { path = "./cli" }
 clap = "3"
 clap_derive = "3"
 clap_complete = "3"

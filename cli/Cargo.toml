@@ -1,11 +1,12 @@
 [package]
-name = "twist_cli"
+name = "twist-cli"
 version = "0.1.0"
 edition = "2021"
 build = "./build.rs"
 
 [dependencies]
 twist-common = { path = "../common" }
+twist-commands = { path = "../commands" }
 anyhow = "1.0"
 clap = { version = "3.1", features = ["derive", "env"] }
 dirs = "4.0"
