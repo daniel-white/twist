@@ -1,5 +1,11 @@
+use std::rc::Rc;
+
 use anyhow::Result;
-use twist_fs::{file_manager::FileManager, path::Paths, repository::git::GitRepository};
+use twist_fs::{
+    file_manager::FileManager,
+    path::Paths,
+    repository::{git::GitRepository, Repository},
+};
 
 use thiserror::Error;
 use twist_shared::{commands::AddFilesArgs, config::toml::TomlConfig};
@@ -9,7 +15,7 @@ enum AddFilesError {}
 
 pub fn add_files(args: AddFilesArgs) -> Result<()> {
     let paths = Paths::new(args.root_dir);
-    let repository = GitRepository::open(&paths)?;
+    let repository: Rc<dyn Repository> = Rc::new(GitRepository::open(&paths.root_dir)?);
 
     let file_manager: FileManager<TomlConfig> = FileManager::new(&paths, &repository);
 

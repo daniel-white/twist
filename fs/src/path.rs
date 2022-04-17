@@ -6,12 +6,13 @@ use std::{
 
 use dirs::home_dir;
 use log::debug;
-use twist_shared::FILES_DIR_NAME;
+use twist_shared::{FilePathInfo, FILES_DIR_NAME};
 
 const HOME_DIR_PREFIX: &str = "~";
 const HOME_DIR_MAP_NAME: &str = "home";
 const HIDDEN_FILE_PREFIX: &str = ".";
 
+#[derive(Debug)]
 pub struct Paths {
     pub home_dir: PathBuf,
     pub root_dir: PathBuf,
@@ -19,31 +20,58 @@ pub struct Paths {
 }
 
 impl Paths {
-    pub fn new<P: AsRef<Path>>(p: P) -> Rc<Self> {
-        let root_dir = p.as_ref().to_path_buf();
+    fn new_with_home_dir<P: AsRef<Path>>(root: P, home_dir: PathBuf) -> Rc<Self> {
+        let root_dir = root.as_ref().to_path_buf();
         let files_dir = root_dir.join(FILES_DIR_NAME);
 
         Rc::new(Paths {
-            home_dir: home_dir().unwrap(),
+            home_dir,
             root_dir,
             files_dir,
         })
     }
 
-    pub fn file_path<P: AsRef<Path>>(&self, p: P) -> Option<PathBuf> {
-        let p = Path::new(p.as_ref());
+    pub fn new<P: AsRef<Path>>(root: P) -> Rc<Self> {
+        Self::new_with_home_dir(root, home_dir().unwrap())
+    }
 
-        if p.starts_with(&self.root_dir) {
+    pub fn resolve_file_paths<P: AsRef<Path>>(&self, p: P) -> Option<FilePathInfo> {
+        let full_src_path = p.as_ref().to_path_buf();
+
+        if full_src_path.starts_with(&self.root_dir) {
+            debug!("file is in root dir, skipping");
             return None;
         }
 
-        let p = if p.starts_with(&self.home_dir) {
+        let src_path = self.truncate_home_path(&full_src_path);
+        let config_repo_path = self.repo_path(&src_path);
+        let repo_path = PathBuf::from(FILES_DIR_NAME).join(&config_repo_path);
+        let full_repo_path = self.files_dir.join(&config_repo_path);
+
+        let file_paths = FilePathInfo {
+            full_src_path,
+            src_path,
+            config_repo_path,
+            repo_path,
+            full_repo_path,
+        };
+
+        debug!("resolved file paths: {:?}", file_paths);
+
+        Some(file_paths)
+    }
+
+    fn truncate_home_path(&self, p: &Path) -> PathBuf {
+        if p.starts_with(&self.home_dir) {
             Path::new(HOME_DIR_PREFIX).join(p.strip_prefix(&self.home_dir).unwrap())
         } else {
             p.to_path_buf()
-        };
+        }
+    }
 
-        let mut path = self.files_dir.clone();
+    fn repo_path(&self, p: &Path) -> PathBuf {
+        let mut path = PathBuf::new();
+
         for p in p.components() {
             match p {
                 Component::Normal(c) if c == HOME_DIR_PREFIX => {
@@ -64,7 +92,7 @@ impl Paths {
             }
         }
 
-        Some(path)
+        path
     }
 
     pub fn ensure_parent_dir<P: AsRef<Path>>(p: P) {
@@ -84,8 +112,8 @@ mod tests {
     #[cfg(not(target_os = "windows"))]
     #[test]
     fn test_root_dir() {
-        let paths = Paths::new(Path::new("/home/user/.twist"));
-        assert_eq!(paths.root_dir, Path::new("/home/user/.twist"));
+        let paths = Paths::new("/home/user/.twist");
+        assert_eq!(paths.root_dir, PathBuf::from("/home/user/.twist"));
     }
 
     #[test]
@@ -95,40 +123,62 @@ mod tests {
     }
 
     #[test]
-    fn test_simple_home_file_path() {
-        let paths = Paths::new(Path::new("/home/user/.twist"));
+    fn test_resolve_file_paths_no_include_root() {
+        let paths = Paths::new("/home/user/.twist");
         assert_eq!(
-            paths.file_path("~/.zshrc"),
-            Some(PathBuf::from("/home/user/.twist/dotfiles/home/zshrc"))
-        );
-
-        assert_eq!(
-            paths.file_path("~/starship/config.toml"),
-            Some(PathBuf::from(
-                "/home/user/.twist/dotfiles/home/starship/config.toml"
-            ))
+            paths.resolve_file_paths("/home/user/.twist/dotfiles/file"),
+            None
         );
     }
 
     #[test]
-    fn test_simple_file_path() {
-        let paths = Paths::new(Path::new("/home/user/.twist"));
+    fn test_resolve_file_paths() {
+        let paths = Paths::new_with_home_dir("/home/user/.twist", PathBuf::from("/home/user"));
+
         assert_eq!(
-            paths.file_path("/.zshrc"),
-            Some(PathBuf::from("/home/user/.twist/dotfiles/zshrc"))
+            paths.resolve_file_paths("/home/user/test"),
+            Some(FilePathInfo {
+                full_src_path: PathBuf::from("/home/user/test"),
+                src_path: PathBuf::from("~/test"),
+                config_repo_path: PathBuf::from("home/test"),
+                repo_path: PathBuf::from("dotfiles/home/test"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/test"),
+            })
         );
 
         assert_eq!(
-            paths.file_path("/usr/etc/config.toml"),
-            Some(PathBuf::from(
-                "/home/user/.twist/dotfiles/usr/etc/config.toml"
-            ))
+            paths.resolve_file_paths("/home/user/.zshrc"),
+            Some(FilePathInfo {
+                full_src_path: PathBuf::from("/home/user/.zshrc"),
+                src_path: PathBuf::from("~/.zshrc"),
+                config_repo_path: PathBuf::from("home/zshrc"),
+                repo_path: PathBuf::from("dotfiles/home/zshrc"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/zshrc"),
+            })
         );
-    }
 
-    #[test]
-    fn test_avoid_self_referential_paths() {
-        let paths = Paths::new(Path::new("/home/user/.twist"));
-        assert_eq!(paths.file_path("/home/user/.twist/config.toml"), None);
+        assert_eq!(
+            paths.resolve_file_paths("/home/user/.config/starship.toml"),
+            Some(FilePathInfo {
+                full_src_path: PathBuf::from("/home/user/.config/starship.toml"),
+                src_path: PathBuf::from("~/.config/starship.toml"),
+                config_repo_path: PathBuf::from("home/config/starship.toml"),
+                repo_path: PathBuf::from("dotfiles/home/config/starship.toml"),
+                full_repo_path: PathBuf::from(
+                    "/home/user/.twist/dotfiles/home/config/starship.toml"
+                ),
+            })
+        );
+
+        assert_eq!(
+            paths.resolve_file_paths("/usr/etc/config.toml"),
+            Some(FilePathInfo {
+                full_src_path: PathBuf::from("/usr/etc/config.toml"),
+                src_path: PathBuf::from("/usr/etc/config.toml"),
+                config_repo_path: PathBuf::from("usr/etc/config.toml"),
+                repo_path: PathBuf::from("dotfiles/usr/etc/config.toml"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/usr/etc/config.toml"),
+            })
+        )
     }
 }

@@ -4,17 +4,19 @@ use std::{
     ffi::OsString,
     fmt::Debug,
     io::{Read, Write},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use anyhow::Result;
 
-pub trait Config: Sized {
-    fn add_file(&mut self, src_path: &Path, dest_name: &Path);
+use super::FilePathInfo;
 
-    fn add_files(&mut self, paths: &[(PathBuf, PathBuf)]) {
-        for (src_path, dest_name) in paths {
-            self.add_file(src_path, dest_name);
+pub trait Config: Sized {
+    fn add_file(&mut self, file: &FilePathInfo);
+
+    fn add_files(&mut self, files: &[FilePathInfo]) {
+        for file in files {
+            self.add_file(file);
         }
     }
 

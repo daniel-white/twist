@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use anyhow::Result;
@@ -50,18 +50,17 @@ where
     pub fn add_files(&self, paths: &[PathBuf]) -> Result<()> {
         let paths: Vec<_> = paths
             .iter()
-            .map(|p| (p.to_owned(), self.paths.file_path(&p)))
-            .filter_map(|(src, dest)| dest.map(|dest| (src, dest)))
+            .flat_map(|p| self.paths.resolve_file_paths(p))
             .collect();
 
-        self.repository.add_files(paths.as_slice())?;
-        self.config.borrow_mut().add_files(paths.as_slice());
+        self.repository.add_files(&paths)?;
+        self.config.borrow_mut().add_files(&paths);
 
         Ok(())
     }
 
-    pub fn add_file(&self, path: PathBuf) -> Result<()> {
-        self.add_files(&[path])
+    pub fn add_file(&self, path: &Path) -> Result<()> {
+        self.add_files(&[PathBuf::from(path)])
     }
 
     pub fn save_config(&self) -> Result<()> {

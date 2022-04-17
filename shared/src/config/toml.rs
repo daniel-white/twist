@@ -9,6 +9,8 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use toml::{from_str as from_toml_str, to_string_pretty as to_toml_string};
 
+use crate::FilePathInfo;
+
 use super::{Config, ConfigIo};
 
 pub const CONFIG_FILE_NAME: &str = "config.toml";
@@ -36,10 +38,10 @@ impl Config for TomlConfig {
         self.dirs.0.remove(path);
     }
 
-    fn add_file(&mut self, path: &Path, target: &Path) {
+    fn add_file(&mut self, file: &FilePathInfo) {
         self.files
             .0
-            .insert(path.to_path_buf(), target.to_path_buf());
+            .insert(file.src_path.clone(), file.config_repo_path.clone());
     }
 
     fn remove_file(&mut self, path: &Path) {

@@ -1,6 +1,6 @@
-use std::fs::copy;
 use std::path::PathBuf;
-use std::rc::Rc;
+
+use std::fs::copy;
 
 use anyhow::Result;
 use chrono::prelude::*;
@@ -10,6 +10,7 @@ use git2::{
 };
 use log::debug;
 use thiserror::Error;
+use twist_shared::FilePathInfo;
 
 use crate::path::Paths;
 
@@ -33,20 +34,19 @@ enum RepositoryError {
 }
 
 pub struct GitRepository {
-    paths: Rc<Paths>,
     git_repository: LibGitRepository,
 }
 
 impl GitRepository {
-    pub fn open(paths: &Rc<Paths>) -> Result<Rc<dyn Repository>> {
-        debug!("opening repository at {:?}", paths.root_dir);
+    pub fn open(root_dir: &PathBuf) -> Result<Self> {
+        debug!("opening repository at {:?}", root_dir);
 
-        let git_repository = match LibGitRepository::open(&paths.root_dir) {
+        let git_repository = match LibGitRepository::open(&root_dir) {
             Ok(git_repository) => Ok(git_repository),
             Err(_) => {
                 let mut opts = LibGitRepositoryInitOptions::new();
                 let opts = opts.mkdir(true);
-                LibGitRepository::init_opts(&paths.root_dir, opts)
+                LibGitRepository::init_opts(&root_dir, opts)
             }
         };
 
@@ -55,33 +55,28 @@ impl GitRepository {
             Err(err) => return Err(RepositoryError::InitializeGit(err.into()).into()),
         };
 
-        debug!("successfully opened repository at {:?}", paths.root_dir);
+        debug!("successfully opened repository at {:?}", root_dir);
 
-        Ok(Rc::new(GitRepository {
-            paths: paths.clone(),
-            git_repository,
-        }))
+        Ok(GitRepository { git_repository })
     }
 }
 
 impl Repository for GitRepository {
-    fn add_files(&self, paths: &[(PathBuf, PathBuf)]) -> Result<()> {
+    fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
         let mut git_index = self
             .git_repository
             .index()
             .map_err(|err| RepositoryError::CreateIndex(err.into()))?;
 
-        for (src_path, dest_path) in paths {
-            debug!("adding {:?} as {:?}", src_path, dest_path);
+        for file in files {
+            debug!("adding {:?} as {:?}", file.full_src_path, file.repo_path);
 
-            Paths::ensure_parent_dir(&dest_path);
+            Paths::ensure_parent_dir(&file.full_repo_path);
 
-            copy(&src_path, &dest_path)
-                .map_err(|err| RepositoryError::AddFile(src_path.to_path_buf(), err.into()))?;
+            copy(&file.full_src_path, &file.full_repo_path)
+                .map_err(|err| RepositoryError::AddFile(file.full_src_path.clone(), err.into()))?;
 
-            let index_path = dest_path.strip_prefix(&self.paths.root_dir)?;
-
-            git_index.add_path(index_path)?;
+            git_index.add_path(&file.repo_path)?;
         }
 
         git_index.write()?;
