@@ -2,7 +2,7 @@ use anyhow::Result;
 //use twist_fs::path::{resolve_paths, ResolvedPaths};
 
 use thiserror::Error;
-use twist_shared::commands::RemoveFilesArgs;
+use twist_common::commands::RemoveFilesArgs;
 
 #[derive(Error, Debug)]
 enum RemoveFilesError {}

@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::Result;
 
-use super::FilePathInfo;
+use crate::path::FilePathInfo;
 
 pub trait Config: Sized {
     fn add_file(&mut self, file: &FilePathInfo);

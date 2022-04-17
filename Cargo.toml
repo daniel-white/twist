@@ -2,8 +2,7 @@
 members = [
     "cli",
     "commands",
-    "fs",
-    "shared"
+    "common"
 ]
 
 [package]

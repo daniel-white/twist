@@ -10,8 +10,7 @@ use anyhow::Result;
 use log::{debug, warn};
 use subprocess::Exec;
 use thiserror::Error;
-use twist_fs::path::Paths;
-use twist_shared::commands::ExecGitArgs;
+use twist_common::{commands::ExecGitArgs, path::Paths};
 
 #[derive(Error, Debug)]
 enum ExecGitError {

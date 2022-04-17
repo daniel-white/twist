@@ -7,7 +7,7 @@ mod remove_files;
 mod update_repository;
 
 use anyhow::Result;
-use twist_shared::commands::Command;
+use twist_common::commands::Command;
 
 use add_files::add_files;
 use apply_files::apply_files;

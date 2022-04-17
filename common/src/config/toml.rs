@@ -9,7 +9,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use toml::{from_str as from_toml_str, to_string_pretty as to_toml_string};
 
-use crate::FilePathInfo;
+use crate::path::FilePathInfo;
 
 use super::{Config, ConfigIo};
 

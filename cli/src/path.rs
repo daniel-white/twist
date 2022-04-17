@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use dirs::home_dir;
 use thiserror::Error;
-use twist_shared::ROOT_DIR_NAME;
+use twist_common::ROOT_DIR_NAME;
 
 #[derive(Debug, Error)]
 enum RootDirError {

@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use thiserror::Error;
-use twist_shared::commands::PullFromRemoteArgs;
+use twist_common::commands::PullFromRemoteArgs;
 
 #[derive(Error, Debug)]
 enum PullFromRemoteError {

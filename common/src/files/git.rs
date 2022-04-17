@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use std::fs::copy;
 
+use crate::path::FilePathInfo;
 use anyhow::Result;
 use chrono::prelude::*;
 use git2::{
@@ -10,7 +11,6 @@ use git2::{
 };
 use log::debug;
 use thiserror::Error;
-use twist_shared::FilePathInfo;
 
 use crate::path::Paths;
 

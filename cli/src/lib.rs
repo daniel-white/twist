@@ -12,11 +12,11 @@ use clap::{Args, IntoApp, Parser, Subcommand};
 
 use logging::init as init_logging;
 use path::root_dir;
-use twist_shared::commands::{
+use twist_common::commands::{
     AddFilesArgs, ApplyFilesArgs, Command, ExecGitArgs, InitArgs, PullFromRemoteArgs,
     PushToRemoteArgs, RemoveFilesArgs, UpdateRepositoryArgs,
 };
-use twist_shared::{DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV};
+use twist_common::{DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV};
 
 shadow!(shadow);
 

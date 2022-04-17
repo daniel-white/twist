@@ -6,17 +6,27 @@ use std::{
 
 use dirs::home_dir;
 use log::debug;
-use twist_shared::{FilePathInfo, FILES_DIR_NAME};
 
 const HOME_DIR_PREFIX: &str = "~";
 const HOME_DIR_MAP_NAME: &str = "home";
 const HIDDEN_FILE_PREFIX: &str = ".";
+
+pub const FILES_DIR_NAME: &str = "dotfiles";
 
 #[derive(Debug)]
 pub struct Paths {
     pub home_dir: PathBuf,
     pub root_dir: PathBuf,
     pub files_dir: PathBuf,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct FilePathInfo {
+    pub full_src_path: PathBuf,
+    pub src_path: PathBuf,
+    pub full_repo_path: PathBuf,
+    pub repo_path: PathBuf,
+    pub config_repo_path: PathBuf,
 }
 
 impl Paths {

@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use thiserror::Error;
-use twist_shared::commands::ApplyFilesArgs;
+use twist_common::commands::ApplyFilesArgs;
 
 #[derive(Error, Debug)]
 enum ApplyFilesError {

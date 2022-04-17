@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use thiserror::Error;
-use twist_shared::commands::PushToRemoteArgs;
+use twist_common::commands::PushToRemoteArgs;
 
 #[derive(Error, Debug)]
 enum PushToRemoteError {

@@ -1,3 +1,5 @@
+pub mod git;
+
 use std::cell::RefCell;
 use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
@@ -7,10 +9,15 @@ use std::rc::Rc;
 use anyhow::Result;
 
 use log::debug;
-use twist_shared::config::ConfigIo;
 
-use super::path::Paths;
-use super::repository::Repository;
+use crate::config::ConfigIo;
+use crate::path::{FilePathInfo, Paths};
+
+pub trait Repository {
+    fn add_files(&self, files: &[FilePathInfo]) -> Result<()>;
+
+    fn commit(&self, message: &str) -> Result<()>;
+}
 
 pub struct FileManager<C>
 where
