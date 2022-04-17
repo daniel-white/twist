@@ -14,6 +14,8 @@ use crate::config::ConfigIo;
 use crate::path::{FilePathInfo, Paths};
 
 pub trait Repository {
+    fn switch_profile(&self, profile: &str) -> Result<()>;
+
     fn add_files(&self, files: &[FilePathInfo]) -> Result<()>;
 
     fn commit(&self, message: &str) -> Result<()>;
@@ -54,6 +56,10 @@ where
         }
     }
 
+    pub fn switch_profile(&self, profile: &str) -> Result<()> {
+        self.repository.switch_profile(profile)
+    }
+
     pub fn add_files(&self, paths: &[PathBuf]) -> Result<()> {
         let files: Vec<_> = paths
             .iter()
@@ -90,5 +96,9 @@ where
         self.config
             .borrow_mut()
             .write(&mut BufWriter::new(config_file))
+    }
+
+    pub fn commit_changes(&self, message: &str) -> Result<()> {
+        self.repository.commit(message)
     }
 }

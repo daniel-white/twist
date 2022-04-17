@@ -3,14 +3,15 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use chrono::prelude::*;
 use git2::{
-    Index as LibGitIndex, ObjectType as LibGitObjectType, Repository as LibGitRepository,
+    BranchType as LibGitBranchType, Commit as LibGitCommit, Index as LibGitIndex,
+    ObjectType as LibGitObjectType, Repository as LibGitRepository,
     RepositoryInitOptions as LibGitRepositoryInitOptions,
 };
 use log::debug;
 use thiserror::Error;
 
 use super::Repository;
-use crate::path::FilePathInfo;
+use crate::{path::FilePathInfo, DEFAULT_PROFILE};
 
 #[derive(Error, Debug)]
 enum RepositoryError {
@@ -29,31 +30,31 @@ enum RepositoryError {
 
 pub struct GitRepository {
     config_file_repo_path: PathBuf,
-    git_repository: LibGitRepository,
+    repo: LibGitRepository,
 }
 
 impl GitRepository {
     pub fn open(root_dir: &PathBuf, config_file_repo_path: &Path) -> Result<Self> {
         debug!("opening repository at {:?}", root_dir);
 
-        let git_repository = match LibGitRepository::open(&root_dir) {
+        let repo = match LibGitRepository::open(&root_dir) {
             Ok(git_repository) => Ok(git_repository),
             Err(_) => {
                 let mut opts = LibGitRepositoryInitOptions::new();
-                let opts = opts.mkdir(true);
+                let opts = opts.mkdir(true).initial_head(DEFAULT_PROFILE);
                 LibGitRepository::init_opts(&root_dir, opts)
             }
         };
 
-        let git_repository = match git_repository {
-            Ok(git_repository) => git_repository,
+        let repo = match repo {
+            Ok(repo) => repo,
             Err(err) => return Err(RepositoryError::InitializeGit(err.into()).into()),
         };
 
         debug!("successfully opened repository at {:?}", root_dir);
 
         Ok(GitRepository {
-            git_repository,
+            repo,
             config_file_repo_path: config_file_repo_path.to_path_buf(),
         })
     }
@@ -61,7 +62,7 @@ impl GitRepository {
     fn open_index(&self) -> Result<LibGitIndex> {
         debug!("opening index");
 
-        self.git_repository
+        self.repo
             .index()
             .map_err(|err| RepositoryError::OpenIndex(err.into()).into())
     }
@@ -74,6 +75,33 @@ fn add_file_to_index(index: &mut LibGitIndex, file: &Path) -> Result<()> {
 }
 
 impl Repository for GitRepository {
+    fn switch_profile(&self, profile: &str) -> Result<()> {
+        debug!("switching to profile: {}", profile);
+
+        // debug!("resolving HEAD commit");
+        // let head = match self.repo.head() {
+        //     Ok(head) => head.resolve().ok(),
+        //     Err(_) => None,
+        // };
+
+        // let commit = match head {
+        //     Some(head) => head
+        //         .peel(LibGitObjectType::Commit)
+        //         .map(|obj| obj.clone().as_commit().unwrap())
+        //         .ok(),
+        //     None => None,
+        // };
+
+        // debug!("switching branch");
+
+        // self.repo
+        //     .find_branch(profile, LibGitBranchType::Local)
+        //     .or_else(|_| self.repo.branch(profile, commit.unwrap(), false))
+        //     .unwrap();
+
+        Ok(())
+    }
+
     fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
         let mut index = self.open_index()?;
 
@@ -97,33 +125,24 @@ impl Repository for GitRepository {
             .write()
             .map_err(|err| RepositoryError::CloseIndex(err.into()))?;
 
-        let tree = index.write_tree()?;
-        let tree = self.git_repository.find_tree(tree)?;
+        let oid = index.write_tree()?;
+        //let commit = self.repo.head()?.peel_to_commit()?;
+        let tree = self.repo.find_tree(oid)?;
+
         let sig = git2::Signature::new(
             "Example",
             "Example",
             &git2::Time::new(now.timestamp(), now.offset().local_minus_utc()),
         )?;
-        let commit = self
-            .git_repository
-            .head()?
-            .resolve()?
-            .peel(LibGitObjectType::Commit)
-            .and_then(|obj| {
-                obj.into_commit()
-                    .map_err(|_| git2::Error::from_str("Couldn't find commit"))
-            })?;
-        self.git_repository
-            .commit(Some("HEAD"), &sig, &sig, message, &tree, &[&commit])?;
+
+        if let Ok(commit) = self.repo.head()?.peel_to_commit() {
+            self.repo
+                .commit(Some("HEAD"), &sig, &sig, message, &tree, &[&commit])?;
+        } else {
+            self.repo
+                .commit(Some("HEAD"), &sig, &sig, message, &tree, &[])?;
+        }
 
         Ok(())
     }
-
-    // fn switch_profile(&self, profile_name: &str) -> Result<()> {
-    //     // let branch = self
-    //     //     .git_repository
-    //     //     .find_branch(profile_name, GitBranchType::Local)
-    //     //     .or_else(||
-    //     //          self.git_repository.branch(profile_name, None))?;
-    // }
 }

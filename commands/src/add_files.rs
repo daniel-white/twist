@@ -22,10 +22,10 @@ pub fn add_files(args: AddFilesArgs) -> Result<()> {
     )?);
 
     let file_manager: FileManager<TomlConfig> = FileManager::new(&paths, &repository);
-
+    file_manager.switch_profile(&args.profile)?;
     file_manager.add_files(args.paths.as_slice())?;
     file_manager.save_config()?;
-    repository.commit(args.message.unwrap().as_str())?;
+    file_manager.commit_changes(args.message.unwrap().as_str())?;
 
     // let mut file_manager = FileManager::new();
     // let ResolvedPaths {
