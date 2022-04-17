@@ -6,7 +6,7 @@ use std::{
 
 use dirs::home_dir;
 use log::debug;
-use twist_shared::{CONFIG_FILE_NAME, FILES_DIR_NAME};
+use twist_shared::FILES_DIR_NAME;
 
 const HOME_DIR_PREFIX: &str = "~";
 const HOME_DIR_MAP_NAME: &str = "home";
@@ -16,20 +16,17 @@ pub struct Paths {
     pub home_dir: PathBuf,
     pub root_dir: PathBuf,
     pub files_dir: PathBuf,
-    pub config_file: PathBuf,
 }
 
 impl Paths {
     pub fn new<P: AsRef<Path>>(p: P) -> Rc<Self> {
         let root_dir = p.as_ref().to_path_buf();
         let files_dir = root_dir.join(FILES_DIR_NAME);
-        let config_file = root_dir.join(CONFIG_FILE_NAME);
 
         Rc::new(Paths {
             home_dir: home_dir().unwrap(),
             root_dir,
             files_dir,
-            config_file,
         })
     }
 
@@ -95,15 +92,6 @@ mod tests {
     fn test_files_dir() {
         let paths = Paths::new(Path::new("/home/user/.twist"));
         assert_eq!(paths.files_dir, Path::new("/home/user/.twist/dotfiles"));
-    }
-
-    #[test]
-    fn test_config_file() {
-        let paths = Paths::new(Path::new("/home/user/.twist"));
-        assert_eq!(
-            paths.config_file,
-            Path::new("/home/user/.twist/config.toml")
-        );
     }
 
     #[test]

@@ -7,4 +7,3 @@ pub const ROOT_DIR_ENV: &str = "TWIST_ROOTDIR";
 
 pub const ROOT_DIR_NAME: &str = ".twist";
 pub const FILES_DIR_NAME: &str = "dotfiles";
-pub const CONFIG_FILE_NAME: &str = "config.toml";
