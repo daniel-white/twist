@@ -107,7 +107,7 @@ impl Paths {
 
     pub fn ensure_parent_dir<P: AsRef<Path>>(p: P) {
         let p = p.as_ref().parent().unwrap();
-        debug!("ensure_parent_dir: {:?}", p);
+        debug!("Ensuring directory exists: {:?}", p);
         match metadata(&p) {
             Ok(metadata) if (metadata.is_file()) => panic!("file exists"),
             _ => create_dir_all(&p).unwrap(),

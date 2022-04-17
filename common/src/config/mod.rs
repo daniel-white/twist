@@ -1,10 +1,9 @@
 pub mod toml;
 
 use std::{
-    ffi::OsString,
     fmt::Debug,
     io::{Read, Write},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 use anyhow::Result;
@@ -34,7 +33,7 @@ pub trait Config: Sized {
 }
 
 pub trait ConfigIo: Config + Default + Debug {
-    fn file_name() -> OsString;
+    fn file_name() -> PathBuf;
 
     fn open(reader: &mut dyn Read) -> Result<Self>;
 

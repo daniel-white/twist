@@ -4,7 +4,7 @@ use anyhow::Result;
 use thiserror::Error;
 
 use twist_common::{
-    config::toml::TomlConfig,
+    config::{toml::TomlConfig, ConfigIo},
     files::{git::GitRepository, FileManager, Repository},
     path::Paths,
 };
@@ -16,7 +16,10 @@ enum AddFilesError {}
 
 pub fn add_files(args: AddFilesArgs) -> Result<()> {
     let paths = Paths::new(args.root_dir);
-    let repository: Rc<dyn Repository> = Rc::new(GitRepository::open(&paths.root_dir)?);
+    let repository: Rc<dyn Repository> = Rc::new(GitRepository::open(
+        &paths.root_dir,
+        &TomlConfig::file_name(),
+    )?);
 
     let file_manager: FileManager<TomlConfig> = FileManager::new(&paths, &repository);
 

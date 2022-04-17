@@ -1,6 +1,5 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    ffi::OsString,
     io::{Read, Write},
     path::{Path, PathBuf},
 };
@@ -50,8 +49,8 @@ impl Config for TomlConfig {
 }
 
 impl ConfigIo for TomlConfig {
-    fn file_name() -> OsString {
-        OsString::from(CONFIG_FILE_NAME)
+    fn file_name() -> PathBuf {
+        PathBuf::from(CONFIG_FILE_NAME)
     }
 
     fn open(reader: &mut dyn Read) -> Result<Self> {

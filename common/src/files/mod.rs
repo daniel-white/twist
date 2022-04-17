@@ -1,7 +1,7 @@
 pub mod git;
 
 use std::cell::RefCell;
-use std::fs::{File, OpenOptions};
+use std::fs::{copy, File, OpenOptions};
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -55,13 +55,23 @@ where
     }
 
     pub fn add_files(&self, paths: &[PathBuf]) -> Result<()> {
-        let paths: Vec<_> = paths
+        let files: Vec<_> = paths
             .iter()
             .flat_map(|p| self.paths.resolve_file_paths(p))
             .collect();
 
-        self.repository.add_files(&paths)?;
-        self.config.borrow_mut().add_files(&paths);
+        for file in &files {
+            debug!(
+                "copying file {:?} to {:?}",
+                file.full_src_path, file.full_repo_path
+            );
+
+            Paths::ensure_parent_dir(&file.full_repo_path);
+            copy(&file.full_src_path, &file.full_repo_path)?;
+        }
+
+        self.repository.add_files(&files)?;
+        self.config.borrow_mut().add_files(&files);
 
         Ok(())
     }

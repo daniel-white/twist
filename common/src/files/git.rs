@@ -1,44 +1,39 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use std::fs::copy;
-
-use crate::path::FilePathInfo;
 use anyhow::Result;
 use chrono::prelude::*;
 use git2::{
-    ObjectType as LibGitObjectType, Repository as LibGitRepository,
+    Index as LibGitIndex, ObjectType as LibGitObjectType, Repository as LibGitRepository,
     RepositoryInitOptions as LibGitRepositoryInitOptions,
 };
 use log::debug;
 use thiserror::Error;
 
-use crate::path::Paths;
-
 use super::Repository;
+use crate::path::FilePathInfo;
 
 #[derive(Error, Debug)]
 enum RepositoryError {
     #[error("failed to open repository: {0}")]
     InitializeGit(anyhow::Error),
 
-    #[error("failed to create index: {0}")]
-    CreateIndex(anyhow::Error),
+    #[error("failed to open index: {0}")]
+    OpenIndex(anyhow::Error),
 
-    // #[error("failed switch profile: {0}")]
-    // SwitchProfile(anyhow::Error),
+    #[error("failed to add file to index: [file={0}, err={1}]")]
+    AddFileToIndex(PathBuf, anyhow::Error),
 
-    // #[error("repository path ({0}) is not a directory")]
-    // NotADirectory(PathBuf),
-    #[error("unable to add file from {0}: {1}")]
-    AddFile(PathBuf, anyhow::Error),
+    #[error("failed to close index: {0}")]
+    CloseIndex(anyhow::Error),
 }
 
 pub struct GitRepository {
+    config_file_repo_path: PathBuf,
     git_repository: LibGitRepository,
 }
 
 impl GitRepository {
-    pub fn open(root_dir: &PathBuf) -> Result<Self> {
+    pub fn open(root_dir: &PathBuf, config_file_repo_path: &Path) -> Result<Self> {
         debug!("opening repository at {:?}", root_dir);
 
         let git_repository = match LibGitRepository::open(&root_dir) {
@@ -57,39 +52,52 @@ impl GitRepository {
 
         debug!("successfully opened repository at {:?}", root_dir);
 
-        Ok(GitRepository { git_repository })
+        Ok(GitRepository {
+            git_repository,
+            config_file_repo_path: config_file_repo_path.to_path_buf(),
+        })
     }
+
+    fn open_index(&self) -> Result<LibGitIndex> {
+        debug!("opening index");
+
+        self.git_repository
+            .index()
+            .map_err(|err| RepositoryError::OpenIndex(err.into()).into())
+    }
+}
+
+fn add_file_to_index(index: &mut LibGitIndex, file: &Path) -> Result<()> {
+    index
+        .add_path(file)
+        .map_err(|err| RepositoryError::AddFileToIndex(file.to_path_buf(), err.into()).into())
 }
 
 impl Repository for GitRepository {
     fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
-        let mut git_index = self
-            .git_repository
-            .index()
-            .map_err(|err| RepositoryError::CreateIndex(err.into()))?;
+        let mut index = self.open_index()?;
 
         for file in files {
             debug!("adding {:?} as {:?}", file.full_src_path, file.repo_path);
-
-            Paths::ensure_parent_dir(&file.full_repo_path);
-
-            copy(&file.full_src_path, &file.full_repo_path)
-                .map_err(|err| RepositoryError::AddFile(file.full_src_path.clone(), err.into()))?;
-
-            git_index.add_path(&file.repo_path)?;
+            add_file_to_index(&mut index, &file.repo_path)?;
         }
 
-        git_index.write()?;
-        //  {
-        //     return Err(anyhow::Error::new("git fail".into()));
-        // }
+        index
+            .write()
+            .map_err(|err| RepositoryError::CloseIndex(err.into()))?;
+
         Ok(())
     }
 
     fn commit(&self, message: &str) -> Result<()> {
         let now: DateTime<Local> = Local::now();
-        let mut git_index = self.git_repository.index()?;
-        let tree = git_index.write_tree()?;
+        let mut index = self.open_index()?;
+        add_file_to_index(&mut index, &self.config_file_repo_path)?;
+        index
+            .write()
+            .map_err(|err| RepositoryError::CloseIndex(err.into()))?;
+
+        let tree = index.write_tree()?;
         let tree = self.git_repository.find_tree(tree)?;
         let sig = git2::Signature::new(
             "Example",
