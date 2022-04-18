@@ -8,10 +8,12 @@ use std::rc::Rc;
 
 use anyhow::Result;
 
+use fs_extra::copy_items;
+use fs_extra::dir::CopyOptions;
 use log::debug;
 
 use crate::config::ConfigIo;
-use crate::path::{FilePathInfo, Paths};
+use crate::path::{DirPathInfo, FilePathInfo, Paths};
 
 pub trait Repository {
     fn switch_profile(&self, profile: &str) -> Result<()>;
@@ -60,30 +62,60 @@ where
         self.repository.switch_profile(profile)
     }
 
-    pub fn add_files(&self, paths: &[PathBuf]) -> Result<()> {
-        let files: Vec<_> = paths
-            .iter()
-            .flat_map(|p| self.paths.resolve_file_paths(p))
-            .collect();
+    pub fn add(&self, paths: &[PathBuf]) -> Result<()> {
+        let (files, dirs) = self.paths.resolve_paths(paths);
 
-        for file in &files {
+        self.add_files(&files)?;
+        self.add_dirs(&dirs)?;
+
+        Ok(())
+    }
+
+    fn copy_items_options() -> CopyOptions {
+        let mut options = CopyOptions::new();
+        options.overwrite = true;
+
+        options
+    }
+
+    fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
+        for file in files {
             debug!(
                 "copying file {:?} to {:?}",
                 file.full_src_path, file.full_repo_path
             );
 
             Paths::ensure_parent_dir(&file.full_repo_path);
-            copy(&file.full_src_path, &file.full_repo_path)?;
+            copy_items(
+                &[&file.full_src_path],
+                &file.full_repo_path,
+                &Self::copy_items_options(),
+            )?;
         }
 
-        self.repository.add_files(&files)?;
-        self.config.borrow_mut().add_files(&files);
+        self.repository.add_files(files)?;
+        self.config.borrow_mut().add_files(files);
 
         Ok(())
     }
 
-    pub fn add_file(&self, path: &Path) -> Result<()> {
-        self.add_files(&[PathBuf::from(path)])
+    fn add_dirs(&self, dirs: &[DirPathInfo]) -> Result<()> {
+        for dir in dirs {
+            debug!(
+                "copying directory {:?} to {:?}",
+                dir.full_src_path, dir.repo_path
+            );
+
+            Paths::ensure_parent_dir(&dir.full_parent_repo_path);
+            copy_items(
+                &[&dir.full_src_path],
+                &dir.full_parent_repo_path,
+                &Self::copy_items_options(),
+            )?;
+        }
+
+        self.config.borrow_mut().add_dirs(dirs);
+        Ok(())
     }
 
     pub fn save_config(&self) -> Result<()> {

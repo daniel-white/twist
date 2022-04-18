@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     io::{Read, Write},
     path::{Path, PathBuf},
 };
@@ -8,7 +8,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use toml::{from_str as from_toml_str, to_string_pretty as to_toml_string};
 
-use crate::path::FilePathInfo;
+use crate::path::{DirPathInfo, FilePathInfo};
 
 use super::{Config, ConfigIo};
 
@@ -23,14 +23,16 @@ pub struct TomlConfig {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-struct TomlConfigDirs(BTreeSet<PathBuf>);
+struct TomlConfigDirs(BTreeMap<PathBuf, PathBuf>);
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct TomlConfigFiles(BTreeMap<PathBuf, PathBuf>);
 
 impl Config for TomlConfig {
-    fn add_dir(&mut self, path: &Path) {
-        self.dirs.0.insert(path.to_path_buf());
+    fn add_dir(&mut self, dir: &DirPathInfo) {
+        self.dirs
+            .0
+            .insert(dir.src_path.clone(), dir.config_repo_path.clone());
     }
 
     fn remove_dir(&mut self, path: &Path) {
@@ -69,7 +71,7 @@ impl ConfigIo for TomlConfig {
 impl Default for TomlConfig {
     fn default() -> Self {
         TomlConfig {
-            dirs: TomlConfigDirs(BTreeSet::new()),
+            dirs: TomlConfigDirs(BTreeMap::new()),
             files: TomlConfigFiles(BTreeMap::new()),
         }
     }

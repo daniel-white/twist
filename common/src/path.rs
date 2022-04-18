@@ -29,6 +29,15 @@ pub struct FilePathInfo {
     pub config_repo_path: PathBuf,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct DirPathInfo {
+    pub full_src_path: PathBuf,
+    pub src_path: PathBuf,
+    pub repo_path: PathBuf,
+    pub full_parent_repo_path: PathBuf,
+    pub config_repo_path: PathBuf,
+}
+
 impl Paths {
     fn new_with_home_dir<P: AsRef<Path>>(root: P, home_dir: PathBuf) -> Rc<Self> {
         let root_dir = root.as_ref().to_path_buf();
@@ -43,6 +52,33 @@ impl Paths {
 
     pub fn new<P: AsRef<Path>>(root: P) -> Rc<Self> {
         Self::new_with_home_dir(root, home_dir().unwrap())
+    }
+
+    pub fn resolve_paths(&self, paths: &[PathBuf]) -> (Vec<FilePathInfo>, Vec<DirPathInfo>) {
+        let mut files = vec![];
+        let mut dirs = vec![];
+
+        debug!("resolving paths: {:?}", paths);
+
+        for p in paths {
+            match metadata(p) {
+                Ok(m) if m.is_file() => {
+                    if let Some(p) = self.resolve_file_paths(p) {
+                        files.push(p)
+                    }
+                }
+                Ok(m) if m.is_dir() => {
+                    if let Some(p) = self.resolve_dir_paths(p) {
+                        dirs.push(p)
+                    }
+                }
+                _ => continue,
+            }
+        }
+
+        debug!("resolved {} files and {} dirs", files.len(), dirs.len());
+
+        (files, dirs)
     }
 
     pub fn resolve_file_paths<P: AsRef<Path>>(&self, p: P) -> Option<FilePathInfo> {
@@ -69,6 +105,33 @@ impl Paths {
         debug!("resolved file paths: {:?}", file_paths);
 
         Some(file_paths)
+    }
+
+    pub fn resolve_dir_paths<P: AsRef<Path>>(&self, p: P) -> Option<DirPathInfo> {
+        let full_src_path = p.as_ref().to_path_buf();
+
+        if full_src_path.starts_with(&self.root_dir) {
+            debug!("dir is in root dir, skipping");
+            return None;
+        }
+
+        let src_path = self.truncate_home_path(&full_src_path);
+        let config_repo_path = self.repo_path(&src_path);
+        let repo_path = PathBuf::from(FILES_DIR_NAME).join(&config_repo_path);
+        let mut full_repo_path = self.files_dir.join(&config_repo_path);
+        full_repo_path.pop();
+
+        let dir_paths = DirPathInfo {
+            full_src_path,
+            src_path,
+            config_repo_path,
+            repo_path,
+            full_parent_repo_path: full_repo_path,
+        };
+
+        debug!("resolved dir paths: {:?}", dir_paths);
+
+        Some(dir_paths)
     }
 
     fn truncate_home_path(&self, p: &Path) -> PathBuf {
@@ -190,5 +253,32 @@ mod tests {
                 full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/usr/etc/config.toml"),
             })
         )
+    }
+
+    #[test]
+    pub fn test_resolve_dir_paths() {
+        let paths = Paths::new_with_home_dir("/home/user/.twist", PathBuf::from("/home/user"));
+
+        assert_eq!(
+            paths.resolve_dir_paths("/home/user/test"),
+            Some(DirPathInfo {
+                full_src_path: PathBuf::from("/home/user/test"),
+                src_path: PathBuf::from("~/test"),
+                config_repo_path: PathBuf::from("home/test"),
+                repo_path: PathBuf::from("dotfiles/home/test"),
+                full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home"),
+            })
+        );
+
+        assert_eq!(
+            paths.resolve_dir_paths("/etc/nginx"),
+            Some(DirPathInfo {
+                full_src_path: PathBuf::from("/etc/nginx"),
+                src_path: PathBuf::from("/etc/nginx"),
+                config_repo_path: PathBuf::from("etc/nginx"),
+                repo_path: PathBuf::from("dotfiles/etc/nginx"),
+                full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/etc"),
+            })
+        );
     }
 }

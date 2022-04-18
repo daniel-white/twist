@@ -8,7 +8,7 @@ use std::{
 
 use anyhow::Result;
 
-use crate::path::FilePathInfo;
+use crate::path::{DirPathInfo, FilePathInfo};
 
 pub trait Config: Sized {
     fn add_file(&mut self, file: &FilePathInfo);
@@ -27,7 +27,13 @@ pub trait Config: Sized {
         }
     }
 
-    fn add_dir(&mut self, src_path: &Path);
+    fn add_dir(&mut self, src_path: &DirPathInfo);
+
+    fn add_dirs(&mut self, paths: &[DirPathInfo]) {
+        for path in paths {
+            self.add_dir(path);
+        }
+    }
 
     fn remove_dir(&mut self, src_path: &Path);
 }
