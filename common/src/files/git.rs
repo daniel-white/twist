@@ -3,8 +3,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use chrono::prelude::*;
 use git2::{
-    BranchType as LibGitBranchType, Commit as LibGitCommit, Index as LibGitIndex,
-    ObjectType as LibGitObjectType, Repository as LibGitRepository,
+    Index as LibGitIndex, Repository as LibGitRepository,
     RepositoryInitOptions as LibGitRepositoryInitOptions,
 };
 use log::debug;

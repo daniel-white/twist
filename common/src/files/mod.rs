@@ -1,9 +1,9 @@
 pub mod git;
 
 use std::cell::RefCell;
-use std::fs::{copy, File, OpenOptions};
+use std::fs::{File, OpenOptions};
 use std::io::{BufReader, BufWriter};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use anyhow::Result;
