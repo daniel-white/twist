@@ -1,13 +1,13 @@
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use chrono::prelude::*;
 use git2::{
     Index as LibGitIndex, Repository as LibGitRepository,
     RepositoryInitOptions as LibGitRepositoryInitOptions,
 };
 use log::debug;
 use thiserror::Error;
+use time::OffsetDateTime;
 
 use super::Repository;
 use crate::{path::FilePathInfo, DEFAULT_PROFILE};
@@ -117,7 +117,7 @@ impl Repository for GitRepository {
     }
 
     fn commit(&self, message: &str) -> Result<()> {
-        let now: DateTime<Local> = Local::now();
+        let now = OffsetDateTime::now_local()?;
         let mut index = self.open_index()?;
         add_file_to_index(&mut index, &self.config_file_repo_path)?;
         index
@@ -131,7 +131,7 @@ impl Repository for GitRepository {
         let sig = git2::Signature::new(
             "Example",
             "Example",
-            &git2::Time::new(now.timestamp(), now.offset().local_minus_utc()),
+            &git2::Time::new(now.unix_timestamp(), now.offset().whole_seconds()),
         )?;
 
         if let Ok(commit) = self.repo.head()?.peel_to_commit() {
