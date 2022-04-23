@@ -25,7 +25,11 @@ pub fn add_files(args: AddFilesArgs) -> Result<()> {
     file_manager.switch_profile(&args.profile)?;
     file_manager.add(&args.paths)?;
     file_manager.save_config()?;
-    file_manager.commit_changes(args.message.unwrap().as_str())?;
+    file_manager.commit_changes(
+        args.message
+            .unwrap_or_else(|| "Adding new dotfiles".to_string())
+            .as_str(),
+    )?;
 
     // let mut file_manager = FileManager::new();
     // let ResolvedPaths {

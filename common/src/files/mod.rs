@@ -1,15 +1,14 @@
 pub mod git;
 
 use std::cell::RefCell;
-use std::fs::{File, OpenOptions};
+use std::fs::{copy, File, OpenOptions};
 use std::io::{BufReader, BufWriter};
 use std::path::PathBuf;
 use std::rc::Rc;
 
 use anyhow::Result;
 
-use fs_extra::copy_items;
-use fs_extra::dir::CopyOptions;
+use dircpy::copy_dir;
 use log::debug;
 
 use crate::config::ConfigIo;
@@ -71,26 +70,16 @@ where
         Ok(())
     }
 
-    fn copy_items_options() -> CopyOptions {
-        let mut options = CopyOptions::new();
-        options.overwrite = true;
-
-        options
-    }
-
     fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
         for file in files {
+            Paths::ensure_parent_dir(&file.full_repo_path)?;
+
             debug!(
                 "copying file {:?} to {:?}",
                 file.full_src_path, file.full_repo_path
             );
 
-            Paths::ensure_parent_dir(&file.full_repo_path);
-            copy_items(
-                &[&file.full_src_path],
-                &file.full_repo_path,
-                &Self::copy_items_options(),
-            )?;
+            copy(&file.full_src_path, &file.full_repo_path)?;
         }
 
         self.repository.add_files(files)?;
@@ -106,12 +95,8 @@ where
                 dir.full_src_path, dir.repo_path
             );
 
-            Paths::ensure_parent_dir(&dir.full_parent_repo_path);
-            copy_items(
-                &[&dir.full_src_path],
-                &dir.full_parent_repo_path,
-                &Self::copy_items_options(),
-            )?;
+            Paths::ensure_parent_dir(&dir.full_repo_path)?;
+            copy_dir(&dir.full_src_path, &dir.full_repo_path)?;
         }
 
         self.config.borrow_mut().add_dirs(dirs);

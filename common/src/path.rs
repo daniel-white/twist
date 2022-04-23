@@ -4,8 +4,10 @@ use std::{
     rc::Rc,
 };
 
+use anyhow::Result;
 use dirs::home_dir;
 use log::debug;
+use thiserror::Error;
 
 const HOME_DIR_PREFIX: &str = "~";
 const HOME_DIR_MAP_NAME: &str = "home";
@@ -35,7 +37,16 @@ pub struct DirPathInfo {
     pub src_path: PathBuf,
     pub repo_path: PathBuf,
     pub full_parent_repo_path: PathBuf,
+    pub full_repo_path: PathBuf,
     pub config_repo_path: PathBuf,
+}
+
+#[derive(Error, Debug)]
+pub enum PathsError {
+    #[error("The existing path {0} is not a directory")]
+    ExistingPathIsNotADirectory(PathBuf),
+    #[error("Unable to create directory {0}")]
+    UnableToCreateDirectory(PathBuf),
 }
 
 impl Paths {
@@ -118,15 +129,18 @@ impl Paths {
         let src_path = self.truncate_home_path(&full_src_path);
         let config_repo_path = self.repo_path(&src_path);
         let repo_path = PathBuf::from(FILES_DIR_NAME).join(&config_repo_path);
-        let mut full_repo_path = self.files_dir.join(&config_repo_path);
-        full_repo_path.pop();
+        let full_repo_path = self.files_dir.join(&config_repo_path);
+        eprintln!("{:?}", full_repo_path);
+        let mut full_parent_repo_path = full_repo_path.clone();
+        full_parent_repo_path.pop();
 
         let dir_paths = DirPathInfo {
             full_src_path,
             src_path,
             config_repo_path,
             repo_path,
-            full_parent_repo_path: full_repo_path,
+            full_repo_path,
+            full_parent_repo_path,
         };
 
         debug!("resolved dir paths: {:?}", dir_paths);
@@ -168,12 +182,18 @@ impl Paths {
         path
     }
 
-    pub fn ensure_parent_dir<P: AsRef<Path>>(p: P) {
+    pub fn ensure_parent_dir<P: AsRef<Path>>(p: P) -> Result<()> {
         let p = p.as_ref().parent().unwrap();
         debug!("Ensuring directory exists: {:?}", p);
         match metadata(&p) {
-            Ok(metadata) if (metadata.is_file()) => panic!("file exists"),
-            _ => create_dir_all(&p).unwrap(),
+            Ok(metadata) if metadata.is_dir() => {
+                debug!("parent path is directory");
+                Ok(())
+            }
+            Ok(_) => Err(PathsError::ExistingPathIsNotADirectory(p.to_path_buf()).into()),
+            _ => create_dir_all(&p)
+                .map(|_| debug!("created directory"))
+                .map_err(|_| PathsError::UnableToCreateDirectory(p.to_path_buf()).into()),
         }
     }
 }
@@ -266,6 +286,7 @@ mod tests {
                 src_path: PathBuf::from("~/test"),
                 config_repo_path: PathBuf::from("home/test"),
                 repo_path: PathBuf::from("dotfiles/home/test"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/test"),
                 full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home"),
             })
         );
@@ -277,7 +298,20 @@ mod tests {
                 src_path: PathBuf::from("/etc/nginx"),
                 config_repo_path: PathBuf::from("etc/nginx"),
                 repo_path: PathBuf::from("dotfiles/etc/nginx"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/etc/nginx"),
                 full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/etc"),
+            })
+        );
+
+        assert_eq!(
+            paths.resolve_dir_paths("/home/user/.ssh"),
+            Some(DirPathInfo {
+                full_src_path: PathBuf::from("/home/user/.ssh"),
+                src_path: PathBuf::from("~/.ssh"),
+                config_repo_path: PathBuf::from("home/ssh"),
+                repo_path: PathBuf::from("dotfiles/home/ssh"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/ssh"),
+                full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home"),
             })
         );
     }
