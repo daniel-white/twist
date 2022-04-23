@@ -1,16 +1,26 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs::{metadata, write},
+    path::{Path, PathBuf},
+};
 
 use anyhow::Result;
 use git2::{
     Index as LibGitIndex, Repository as LibGitRepository,
     RepositoryInitOptions as LibGitRepositoryInitOptions,
 };
+use glob::glob;
 use log::debug;
 use thiserror::Error;
 use time::OffsetDateTime;
 
 use super::Repository;
-use crate::{path::FilePathInfo, DEFAULT_PROFILE};
+use crate::{
+    path::{DirPathInfo, FilePathInfo},
+    DEFAULT_PROFILE,
+};
+
+const GITIGNORE_FILE_NAME: &str = ".gitignore";
+const GITIGNORE_FILE_CONTENT: &str = include_str!("./gitignore.txt");
 
 #[derive(Error, Debug)]
 enum RepositoryError {
@@ -29,6 +39,7 @@ enum RepositoryError {
 
 pub struct GitRepository {
     config_file_repo_path: PathBuf,
+    root_dir: PathBuf,
     repo: LibGitRepository,
 }
 
@@ -52,8 +63,14 @@ impl GitRepository {
 
         debug!("successfully opened repository at {:?}", root_dir);
 
+        let gitignore_file_path = root_dir.join(GITIGNORE_FILE_NAME);
+        if metadata(&gitignore_file_path).is_err() {
+            write(&gitignore_file_path, GITIGNORE_FILE_CONTENT)?
+        }
+
         Ok(GitRepository {
             repo,
+            root_dir: root_dir.to_owned(),
             config_file_repo_path: config_file_repo_path.to_path_buf(),
         })
     }
@@ -67,7 +84,12 @@ impl GitRepository {
     }
 }
 
-fn add_file_to_index(index: &mut LibGitIndex, file: &Path) -> Result<()> {
+fn add_file_to_index(repo: &LibGitRepository, index: &mut LibGitIndex, file: &Path) -> Result<()> {
+    let ignored = repo.is_path_ignored(file)?;
+    if ignored {
+        return Ok(());
+    }
+
     index
         .add_path(file)
         .map_err(|err| RepositoryError::AddFileToIndex(file.to_path_buf(), err.into()).into())
@@ -106,20 +128,42 @@ impl Repository for GitRepository {
 
         for file in files {
             debug!("adding {:?} as {:?}", file.full_src_path, file.repo_path);
-            add_file_to_index(&mut index, &file.repo_path)?;
+            add_file_to_index(&self.repo, &mut index, &file.repo_path)?;
         }
 
         index
             .write()
-            .map_err(|err| RepositoryError::CloseIndex(err.into()))?;
+            .map_err(|err| RepositoryError::CloseIndex(err.into()).into())
+    }
 
-        Ok(())
+    fn add_dirs(&self, dirs: &[DirPathInfo]) -> Result<()> {
+        let mut index = self.open_index()?;
+
+        for file_path in dirs
+            .iter()
+            .flat_map(|dir| glob(dir.full_repo_path.join("**/*").to_str().unwrap()))
+            .flatten()
+            .flatten()
+            .flat_map(|p| match metadata(&p) {
+                Ok(m) if m.is_file() => Some(p),
+                _ => None,
+            })
+        {
+            let file_repo_path = file_path.strip_prefix(&self.root_dir).unwrap();
+            debug!("adding {:?} as {:?}", file_path, file_repo_path);
+            add_file_to_index(&self.repo, &mut index, file_repo_path)?;
+        }
+
+        index
+            .write()
+            .map_err(|err| RepositoryError::CloseIndex(err.into()).into())
     }
 
     fn commit(&self, message: &str) -> Result<()> {
         let now = OffsetDateTime::now_local()?;
         let mut index = self.open_index()?;
-        add_file_to_index(&mut index, &self.config_file_repo_path)?;
+        add_file_to_index(&self.repo, &mut index, &self.config_file_repo_path)?;
+        add_file_to_index(&self.repo, &mut index, Path::new(GITIGNORE_FILE_NAME))?;
         index
             .write()
             .map_err(|err| RepositoryError::CloseIndex(err.into()))?;

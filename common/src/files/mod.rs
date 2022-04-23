@@ -18,6 +18,7 @@ pub trait Repository {
     fn switch_profile(&self, profile: &str) -> Result<()>;
 
     fn add_files(&self, files: &[FilePathInfo]) -> Result<()>;
+    fn add_dirs(&self, dirs: &[DirPathInfo]) -> Result<()>;
 
     fn commit(&self, message: &str) -> Result<()>;
 }
@@ -99,6 +100,7 @@ where
             copy_dir(&dir.full_src_path, &dir.full_repo_path)?;
         }
 
+        self.repository.add_dirs(dirs)?;
         self.config.borrow_mut().add_dirs(dirs);
         Ok(())
     }
