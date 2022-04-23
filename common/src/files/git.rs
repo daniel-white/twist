@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsString,
     fs::{metadata, write},
     path::{Path, PathBuf},
 };
@@ -6,10 +7,10 @@ use std::{
 use anyhow::Result;
 use git2::{
     Index as LibGitIndex, Repository as LibGitRepository,
-    RepositoryInitOptions as LibGitRepositoryInitOptions,
+    RepositoryInitOptions as LibGitRepositoryInitOptions, Status as LibGitStatus,
 };
 use glob::glob;
-use log::debug;
+use log::{debug, info};
 use thiserror::Error;
 use time::OffsetDateTime;
 
@@ -82,17 +83,19 @@ impl GitRepository {
             .index()
             .map_err(|err| RepositoryError::OpenIndex(err.into()).into())
     }
-}
 
-fn add_file_to_index(repo: &LibGitRepository, index: &mut LibGitIndex, file: &Path) -> Result<()> {
-    let ignored = repo.is_path_ignored(file)?;
-    if ignored {
-        return Ok(());
+    fn add_file_to_index(&self, index: &mut LibGitIndex, p: &Path) -> Result<()> {
+        let ignored = self.repo.is_path_ignored(p)?;
+        if ignored {
+            return Ok(());
+        }
+
+        debug!("staging {:?}", self.root_dir.join(p));
+
+        index
+            .add_path(p)
+            .map_err(|err| RepositoryError::AddFileToIndex(p.to_path_buf(), err.into()).into())
     }
-
-    index
-        .add_path(file)
-        .map_err(|err| RepositoryError::AddFileToIndex(file.to_path_buf(), err.into()).into())
 }
 
 impl Repository for GitRepository {
@@ -127,8 +130,7 @@ impl Repository for GitRepository {
         let mut index = self.open_index()?;
 
         for file in files {
-            debug!("adding {:?} as {:?}", file.full_src_path, file.repo_path);
-            add_file_to_index(&self.repo, &mut index, &file.repo_path)?;
+            self.add_file_to_index(&mut index, &file.repo_path)?;
         }
 
         index
@@ -150,8 +152,7 @@ impl Repository for GitRepository {
             })
         {
             let file_repo_path = file_path.strip_prefix(&self.root_dir).unwrap();
-            debug!("adding {:?} as {:?}", file_path, file_repo_path);
-            add_file_to_index(&self.repo, &mut index, file_repo_path)?;
+            self.add_file_to_index(&mut index, file_repo_path)?;
         }
 
         index
@@ -161,15 +162,26 @@ impl Repository for GitRepository {
 
     fn commit(&self, message: &str) -> Result<()> {
         let now = OffsetDateTime::now_local()?;
+
         let mut index = self.open_index()?;
-        add_file_to_index(&self.repo, &mut index, &self.config_file_repo_path)?;
-        add_file_to_index(&self.repo, &mut index, Path::new(GITIGNORE_FILE_NAME))?;
-        index
-            .write()
-            .map_err(|err| RepositoryError::CloseIndex(err.into()))?;
+
+        debug!("staging config files");
+        self.add_file_to_index(&mut index, &self.config_file_repo_path)?;
+        self.add_file_to_index(&mut index, Path::new(GITIGNORE_FILE_NAME))?;
+
+        let any_changed_files = index
+            .iter()
+            .flat_map(|e| String::from_utf8(e.path))
+            .map(|e| PathBuf::from(OsString::from(e)))
+            .flat_map(|p| self.repo.status_file(&p))
+            .any(|s| s != LibGitStatus::CURRENT);
+
+        if !any_changed_files {
+            info!("no files changed");
+            return Ok(());
+        }
 
         let oid = index.write_tree()?;
-        //let commit = self.repo.head()?.peel_to_commit()?;
         let tree = self.repo.find_tree(oid)?;
 
         let sig = git2::Signature::new(
@@ -178,13 +190,15 @@ impl Repository for GitRepository {
             &git2::Time::new(now.unix_timestamp(), now.offset().whole_seconds()),
         )?;
 
-        if let Ok(commit) = self.repo.head()?.peel_to_commit() {
-            self.repo
-                .commit(Some("HEAD"), &sig, &sig, message, &tree, &[&commit])?;
-        } else {
-            self.repo
-                .commit(Some("HEAD"), &sig, &sig, message, &tree, &[])?;
-        }
+        let commit = match self.repo.head() {
+            Ok(head) => head.peel_to_commit().ok(),
+            Err(_) => None,
+        };
+
+        let commits: Vec<_> = [&commit].iter().filter_map(|c| c.as_ref()).collect();
+
+        self.repo
+            .commit(Some("HEAD"), &sig, &sig, message, &tree, &commits)?;
 
         Ok(())
     }
