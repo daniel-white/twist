@@ -118,6 +118,30 @@ impl Paths {
         Some(file_paths)
     }
 
+    pub fn resolve_file_paths_from_config_paths<P: AsRef<Path>>(
+        &self,
+        src_path: P,
+        config_repo_path: P,
+    ) -> FilePathInfo {
+        let src_path = src_path.as_ref();
+        let config_repo_path = config_repo_path.as_ref();
+
+        let full_src_path = if src_path.starts_with(HOME_DIR_PREFIX) {
+            self.home_dir
+                .join(src_path.strip_prefix(HOME_DIR_PREFIX).unwrap())
+        } else {
+            src_path.to_path_buf()
+        };
+
+        FilePathInfo {
+            full_src_path,
+            src_path: src_path.to_path_buf(),
+            config_repo_path: config_repo_path.to_path_buf(),
+            repo_path: PathBuf::from(FILES_DIR_NAME).join(config_repo_path),
+            full_repo_path: self.files_dir.join(&config_repo_path),
+        }
+    }
+
     pub fn resolve_dir_paths<P: AsRef<Path>>(&self, p: P) -> Option<DirPathInfo> {
         let full_src_path = p.as_ref().to_path_buf();
 
@@ -273,6 +297,41 @@ mod tests {
                 full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/usr/etc/config.toml"),
             })
         )
+    }
+
+    #[test]
+    pub fn test_resolve_file_paths_from_config_paths() {
+        let paths = Paths::new_with_home_dir("/home/user/.twist", PathBuf::from("/home/user"));
+
+        assert_eq!(
+            paths.resolve_file_paths_from_config_paths(
+                "~/.config/starship.toml",
+                "home/config/starship.toml"
+            ),
+            FilePathInfo {
+                full_src_path: PathBuf::from("/home/user/.config/starship.toml"),
+                src_path: PathBuf::from("~/.config/starship.toml"),
+                config_repo_path: PathBuf::from("home/config/starship.toml"),
+                repo_path: PathBuf::from("dotfiles/home/config/starship.toml"),
+                full_repo_path: PathBuf::from(
+                    "/home/user/.twist/dotfiles/home/config/starship.toml"
+                ),
+            }
+        );
+
+        assert_eq!(
+            paths.resolve_file_paths_from_config_paths(
+                "/etc/nginx/nginx.conf",
+                "etc/nginx/nginx.conf"
+            ),
+            FilePathInfo {
+                full_src_path: PathBuf::from("/etc/nginx/nginx.conf"),
+                src_path: PathBuf::from("/etc/nginx/nginx.conf"),
+                config_repo_path: PathBuf::from("etc/nginx/nginx.conf"),
+                repo_path: PathBuf::from("dotfiles/etc/nginx/nginx.conf"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/etc/nginx/nginx.conf"),
+            }
+        );
     }
 
     #[test]
