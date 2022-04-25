@@ -4,7 +4,9 @@
   "editor.defaultFormatter": "matklad.rust-analyzer",
   "cSpell.words": [
     "canonicalize",
+    "dircpy",
     "dotfiles",
+    "mkdir",
     "ROOTDIR",
     "simplelog",
     "structopt",
@@ -15,5 +17,8 @@
   "rust-analyzer.cargo.allFeatures": true,
   "[rust]": {
     "editor.defaultFormatter": "matklad.rust-analyzer"
-  }
+  },
+  "bookmarks.sideBar.expanded": true,
+  "bookmarks.useWorkaroundForFormatters": true,
+  "bookmarks.label.suggestion": "suggestWhenSelected"
 }

@@ -4,7 +4,7 @@ use anyhow::Result;
 use thiserror::Error;
 
 use twist_common::{
-    config::{toml::TomlConfig, ConfigIo},
+    config::ConfigManager,
     files::{git::GitRepository, FileManager, Repository},
     path::Paths,
 };
@@ -15,13 +15,12 @@ use crate::AddFilesArgs;
 enum AddFilesError {}
 
 pub fn add_files(args: AddFilesArgs) -> Result<()> {
-    let paths = Paths::new(args.root_dir);
-    let repository: Rc<dyn Repository> = Rc::new(GitRepository::open(
-        &paths.root_dir,
-        &TomlConfig::file_name(),
-    )?);
+    let paths = Rc::new(Paths::new(args.root_dir));
+    let config = Rc::new(ConfigManager::open(&paths));
 
-    let file_manager: FileManager<TomlConfig> = FileManager::new(&paths, &repository);
+    let repository: Rc<dyn Repository> = Rc::new(GitRepository::open(&config, &paths)?);
+
+    let file_manager: FileManager = FileManager::new(&config, &paths, &repository);
     file_manager.switch_profile(&args.profile)?;
     file_manager.add(&args.paths)?;
     file_manager.save_config()?;
@@ -30,18 +29,6 @@ pub fn add_files(args: AddFilesArgs) -> Result<()> {
             .unwrap_or_else(|| "Adding new dotfiles".to_string())
             .as_str(),
     )?;
-
-    // let mut file_manager = FileManager::new();
-    // let ResolvedPaths {
-    //     file_paths,
-    //     dir_paths,
-    // } = resolve_paths(&args.paths)?;
-
-    // println!("file_paths: {:?}", file_paths);
-    // println!("dir_paths: {:?}", dir_paths);
-
-    // file_manager.add_files(&file_paths);
-    // file_manager.add_dirs(&dir_paths);
 
     Ok(())
 }

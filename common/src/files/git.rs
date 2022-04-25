@@ -6,8 +6,9 @@ use std::{
 
 use anyhow::Result;
 use git2::{
-    Index as LibGitIndex, Repository as LibGitRepository,
-    RepositoryInitOptions as LibGitRepositoryInitOptions, Status as LibGitStatus,
+    Config as LibGitConfig, Index as LibGitIndex, Repository as LibGitRepository,
+    RepositoryInitOptions as LibGitRepositoryInitOptions, Signature as LibGitSignature,
+    Status as LibGitStatus, Time as LibGitTime,
 };
 use glob::glob;
 use log::{debug, info};
@@ -16,10 +17,13 @@ use time::OffsetDateTime;
 
 use super::Repository;
 use crate::{
-    path::{DirPathInfo, FilePathInfo},
-    DEFAULT_PROFILE,
+    config::ConfigManager,
+    path::{DirPathInfo, FilePathInfo, Paths},
+    DEFAULT_COMMITTER_EMAIL, DEFAULT_COMMITTER_NAME, DEFAULT_PROFILE,
 };
 
+const GIT_CONFIG_USER_NAME: &str = "user.name";
+const GIT_CONFIG_USER_EMAIL: &str = "user.email";
 const GITIGNORE_FILE_NAME: &str = ".gitignore";
 const GITIGNORE_FILE_CONTENT: &str = include_str!("./gitignore.txt");
 
@@ -38,14 +42,44 @@ enum RepositoryError {
     CloseIndex(anyhow::Error),
 }
 
+#[derive(Debug)]
+struct Committer {
+    name: String,
+    email: String,
+}
+
+impl Committer {
+    fn new(config: &mut LibGitConfig) -> Self {
+        let name = config
+            .get_string(GIT_CONFIG_USER_NAME)
+            .unwrap_or_else(|_| DEFAULT_COMMITTER_NAME.to_string());
+        let email = config
+            .get_string(GIT_CONFIG_USER_EMAIL)
+            .unwrap_or_else(|_| DEFAULT_COMMITTER_EMAIL.to_string());
+
+        Committer { name, email }
+    }
+}
+
+impl Default for Committer {
+    fn default() -> Self {
+        Committer {
+            name: DEFAULT_COMMITTER_NAME.to_string(),
+            email: DEFAULT_COMMITTER_EMAIL.to_string(),
+        }
+    }
+}
+
 pub struct GitRepository {
     config_file_repo_path: PathBuf,
     root_dir: PathBuf,
     repo: LibGitRepository,
+    committer: Committer,
 }
 
 impl GitRepository {
-    pub fn open(root_dir: &PathBuf, config_file_repo_path: &Path) -> Result<Self> {
+    pub fn open(config: &ConfigManager, paths: &Paths) -> Result<Self> {
+        let root_dir = paths.root_dir.clone();
         debug!("opening repository at {:?}", root_dir);
 
         let repo = match LibGitRepository::open(&root_dir) {
@@ -69,10 +103,21 @@ impl GitRepository {
             write(&gitignore_file_path, GITIGNORE_FILE_CONTENT)?
         }
 
+        let committer = match repo.config() {
+            Ok(mut config) => Committer::new(&mut config),
+            Err(err) => {
+                debug!("Error reading git config: {:?}", err);
+                Committer::default()
+            }
+        };
+
+        debug!("resolved committer: {:?}", committer);
+
         Ok(GitRepository {
             repo,
-            root_dir: root_dir.to_owned(),
-            config_file_repo_path: config_file_repo_path.to_path_buf(),
+            root_dir,
+            config_file_repo_path: config.config_file_repo_path(),
+            committer,
         })
     }
 
@@ -184,10 +229,10 @@ impl Repository for GitRepository {
         let oid = index.write_tree()?;
         let tree = self.repo.find_tree(oid)?;
 
-        let sig = git2::Signature::new(
-            "Example",
-            "Example",
-            &git2::Time::new(now.unix_timestamp(), now.offset().whole_seconds()),
+        let sig = LibGitSignature::new(
+            &self.committer.name,
+            &self.committer.email,
+            &LibGitTime::new(now.unix_timestamp(), now.offset().whole_seconds() / 60),
         )?;
 
         let commit = match self.repo.head() {

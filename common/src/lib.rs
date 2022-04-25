@@ -7,3 +7,6 @@ pub const PROFILE_ENV: &str = "TWIST_PROFILE";
 pub const ROOT_DIR_ENV: &str = "TWIST_ROOTDIR";
 
 pub const ROOT_DIR_NAME: &str = ".twist";
+
+pub const DEFAULT_COMMITTER_NAME: &str = "Twist";
+pub const DEFAULT_COMMITTER_EMAIL: &str = "twist@example.com";

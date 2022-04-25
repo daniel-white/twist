@@ -1,7 +1,6 @@
 use std::{
     fs::{create_dir_all, metadata},
     path::{Component, Path, PathBuf},
-    rc::Rc,
 };
 
 use anyhow::Result;
@@ -50,18 +49,18 @@ pub enum PathsError {
 }
 
 impl Paths {
-    fn new_with_home_dir<P: AsRef<Path>>(root: P, home_dir: PathBuf) -> Rc<Self> {
+    fn new_with_home_dir<P: AsRef<Path>>(root: P, home_dir: PathBuf) -> Self {
         let root_dir = root.as_ref().to_path_buf();
         let files_dir = root_dir.join(FILES_DIR_NAME);
 
-        Rc::new(Paths {
+        Paths {
             home_dir,
             root_dir,
             files_dir,
-        })
+        }
     }
 
-    pub fn new<P: AsRef<Path>>(root: P) -> Rc<Self> {
+    pub fn new<P: AsRef<Path>>(root: P) -> Self {
         Self::new_with_home_dir(root, home_dir().unwrap())
     }
 

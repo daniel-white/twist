@@ -1,8 +1,7 @@
 pub mod git;
 
-use std::cell::RefCell;
-use std::fs::{copy, File, OpenOptions};
-use std::io::{BufReader, BufWriter};
+use std::fs::copy;
+
 use std::path::PathBuf;
 use std::rc::Rc;
 
@@ -11,7 +10,7 @@ use anyhow::Result;
 use dircpy::copy_dir;
 use log::debug;
 
-use crate::config::ConfigIo;
+use crate::config::ConfigManager;
 use crate::path::{DirPathInfo, FilePathInfo, Paths};
 
 pub trait Repository {
@@ -23,37 +22,21 @@ pub trait Repository {
     fn commit(&self, message: &str) -> Result<()>;
 }
 
-pub struct FileManager<C>
-where
-    C: ConfigIo,
-{
+pub struct FileManager {
     paths: Rc<Paths>,
-    config_file_path: PathBuf,
-    config: RefCell<C>,
+    config: Rc<ConfigManager>,
     repository: Rc<dyn Repository>,
 }
 
-impl<C> FileManager<C>
-where
-    C: ConfigIo,
-{
-    pub fn new(paths: &Rc<Paths>, repository: &Rc<dyn Repository>) -> Self {
-        let config_file_path = paths.root_dir.join(C::file_name());
-
-        debug!("reading configuration from {:?}", config_file_path);
-        let config = match File::open(&config_file_path) {
-            Ok(file) => {
-                let mut reader = BufReader::new(file);
-                C::open(&mut reader).ok().or_else(|| Some(C::default()))
-            }
-            Err(_) => Some(C::default()),
-        }
-        .unwrap();
-
+impl FileManager {
+    pub fn new(
+        config: &Rc<ConfigManager>,
+        paths: &Rc<Paths>,
+        repository: &Rc<dyn Repository>,
+    ) -> Self {
         FileManager {
+            config: config.clone(),
             paths: paths.clone(),
-            config_file_path,
-            config: RefCell::new(config),
             repository: repository.clone(),
         }
     }
@@ -71,7 +54,7 @@ where
         Ok(())
     }
 
-    fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
+    pub fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
         for file in files {
             Paths::ensure_parent_dir(&file.full_repo_path)?;
 
@@ -84,7 +67,7 @@ where
         }
 
         self.repository.add_files(files)?;
-        self.config.borrow_mut().add_files(files);
+        self.config.add_files(files);
 
         Ok(())
     }
@@ -101,20 +84,12 @@ where
         }
 
         self.repository.add_dirs(dirs)?;
-        self.config.borrow_mut().add_dirs(dirs);
+        self.config.add_dirs(dirs);
         Ok(())
     }
 
     pub fn save_config(&self) -> Result<()> {
-        let config_file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open(&self.config_file_path)?;
-
-        self.config
-            .borrow_mut()
-            .write(&mut BufWriter::new(config_file))
+        self.config.save()
     }
 
     pub fn commit_changes(&self, message: &str) -> Result<()> {
