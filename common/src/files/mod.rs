@@ -13,26 +13,19 @@ use log::debug;
 use crate::config::ConfigManager;
 use crate::path::{DirPathInfo, FilePathInfo, Paths};
 
-pub trait Repository {
-    fn switch_profile(&self, profile: &str) -> Result<()>;
-
-    fn add_files(&self, files: &[FilePathInfo]) -> Result<()>;
-    fn add_dirs(&self, dirs: &[DirPathInfo]) -> Result<()>;
-
-    fn commit(&self, message: &str) -> Result<()>;
-}
+use self::git::GitRepository;
 
 pub struct FileManager {
     paths: Rc<Paths>,
     config: Rc<ConfigManager>,
-    repository: Rc<dyn Repository>,
+    repository: Rc<GitRepository>,
 }
 
 impl FileManager {
     pub fn new(
         config: &Rc<ConfigManager>,
         paths: &Rc<Paths>,
-        repository: &Rc<dyn Repository>,
+        repository: &Rc<GitRepository>,
     ) -> Self {
         FileManager {
             config: config.clone(),
@@ -66,7 +59,6 @@ impl FileManager {
             copy(&file.full_src_path, &file.full_repo_path)?;
         }
 
-        self.repository.add_files(files)?;
         self.config.add_files(files);
 
         Ok(())
@@ -83,7 +75,6 @@ impl FileManager {
             copy_dir(&dir.full_src_path, &dir.full_repo_path)?;
         }
 
-        self.repository.add_dirs(dirs)?;
         self.config.add_dirs(dirs);
         Ok(())
     }

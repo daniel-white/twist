@@ -11,7 +11,8 @@
     "simplelog",
     "structopt",
     "subcommand",
-    "thiserror"
+    "thiserror",
+    "workdir"
   ],
   "rust-analyzer.checkOnSave.command": "clippy",
   "rust-analyzer.cargo.allFeatures": true,

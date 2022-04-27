@@ -5,7 +5,7 @@ use thiserror::Error;
 
 use twist_common::{
     config::ConfigManager,
-    files::{git::GitRepository, FileManager, Repository},
+    files::{git::GitRepository, FileManager},
     path::Paths,
 };
 
@@ -18,7 +18,7 @@ pub fn add_files(args: AddFilesArgs) -> Result<()> {
     let paths = Rc::new(Paths::new(args.root_dir));
     let config = Rc::new(ConfigManager::open(&paths));
 
-    let repository: Rc<dyn Repository> = Rc::new(GitRepository::open(&config, &paths)?);
+    let repository = Rc::new(GitRepository::open(&paths)?);
 
     let file_manager: FileManager = FileManager::new(&config, &paths, &repository);
     file_manager.switch_profile(&args.profile)?;
