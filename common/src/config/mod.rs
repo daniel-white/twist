@@ -128,9 +128,11 @@ impl ConfigManager {
         }
     }
 
-    pub fn remove_files(&self, paths: &[&Path]) {
+    pub fn remove_files(&self, paths: &[FilePathInfo]) {
         for path in paths {
-            self.config_data.borrow_mut().remove_file(path);
+            self.config_data
+                .borrow_mut()
+                .remove_file(&path.config_repo_path);
         }
     }
 
@@ -153,9 +155,11 @@ impl ConfigManager {
         }
     }
 
-    pub fn remove_dirs(self, paths: &[&Path]) {
+    pub fn remove_dirs(&self, paths: &[DirPathInfo]) {
         for path in paths {
-            self.config_data.borrow_mut().remove_dir(path);
+            self.config_data
+                .borrow_mut()
+                .remove_dir(&path.config_repo_path);
         }
     }
 }

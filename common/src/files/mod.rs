@@ -1,6 +1,6 @@
 pub mod git;
 
-use std::fs::copy;
+use std::fs::{copy, remove_dir_all, remove_file};
 
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -41,6 +41,15 @@ impl FileManager {
 
         let dirs = self.config.dirs();
         self.copy_dirs_to_repo(&dirs)?;
+        Ok(())
+    }
+
+    pub fn remove(&self, paths: &[PathBuf]) -> Result<()> {
+        let (files, dirs) = self.paths.resolve_paths(paths);
+
+        self.remove_files(&files)?;
+        self.remove_dirs(&dirs)?;
+
         Ok(())
     }
 
@@ -86,6 +95,28 @@ impl FileManager {
             Paths::ensure_parent_dir(&dir.full_repo_path)?;
             copy_dir(&dir.full_src_path, &dir.full_repo_path)?;
         }
+
+        Ok(())
+    }
+
+    fn remove_files(&self, files: &[FilePathInfo]) -> Result<()> {
+        for file in files.iter() {
+            debug!("deleting file {:?}", file.full_src_path);
+            remove_file(&file.full_repo_path)?;
+        }
+
+        self.config.remove_files(files);
+
+        Ok(())
+    }
+
+    fn remove_dirs(&self, dirs: &[DirPathInfo]) -> Result<()> {
+        for dir in dirs.iter() {
+            debug!("deleting directory {:?}", dir.full_src_path);
+            remove_dir_all(&dir.full_repo_path)?;
+        }
+
+        self.config.remove_dirs(dirs);
 
         Ok(())
     }
