@@ -122,6 +122,14 @@ impl ConfigManager {
             .collect()
     }
 
+    pub fn contains_file(&self, file: &FilePathInfo) -> bool {
+        self.config_data
+            .borrow()
+            .files
+            .0
+            .contains_key(&file.src_path)
+    }
+
     pub fn add_files(&self, files: &[FilePathInfo]) {
         for file in files {
             self.config_data.borrow_mut().add_file(file);
@@ -130,9 +138,7 @@ impl ConfigManager {
 
     pub fn remove_files(&self, paths: &[FilePathInfo]) {
         for path in paths {
-            self.config_data
-                .borrow_mut()
-                .remove_file(&path.config_repo_path);
+            self.config_data.borrow_mut().remove_file(&path.src_path);
         }
     }
 
@@ -149,6 +155,10 @@ impl ConfigManager {
             .collect()
     }
 
+    pub fn contains_dir(&self, dir: &DirPathInfo) -> bool {
+        self.config_data.borrow().dirs.0.contains_key(&dir.src_path)
+    }
+
     pub fn add_dirs(&self, paths: &[DirPathInfo]) {
         for path in paths {
             self.config_data.borrow_mut().add_dir(path);
@@ -157,9 +167,7 @@ impl ConfigManager {
 
     pub fn remove_dirs(&self, paths: &[DirPathInfo]) {
         for path in paths {
-            self.config_data
-                .borrow_mut()
-                .remove_dir(&path.config_repo_path);
+            self.config_data.borrow_mut().remove_dir(&path.src_path);
         }
     }
 }

@@ -167,7 +167,8 @@ impl GitRepository {
                 | LibGitDelta::Copied
                 | LibGitDelta::Modified
                 | LibGitDelta::Renamed
-                | LibGitDelta::Untracked => {
+                | LibGitDelta::Untracked
+                | LibGitDelta::Unmodified => {
                     let path = diff_delta.new_file().path().unwrap();
                     debug!("Staging {:?} file: {:?}", delta, path);
                     index.add_path(path)?;

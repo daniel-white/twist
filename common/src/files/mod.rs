@@ -100,7 +100,7 @@ impl FileManager {
     }
 
     fn remove_files(&self, files: &[FilePathInfo]) -> Result<()> {
-        for file in files.iter() {
+        for file in files.iter().filter(|f| self.config.contains_file(f)) {
             debug!("deleting file {:?}", file.full_src_path);
             remove_file(&file.full_repo_path)?;
         }
@@ -111,7 +111,7 @@ impl FileManager {
     }
 
     fn remove_dirs(&self, dirs: &[DirPathInfo]) -> Result<()> {
-        for dir in dirs.iter() {
+        for dir in dirs.iter().filter(|f| self.config.contains_dir(f)) {
             debug!("deleting directory {:?}", dir.full_src_path);
             remove_dir_all(&dir.full_repo_path)?;
         }
