@@ -171,6 +171,32 @@ impl Paths {
         Some(dir_paths)
     }
 
+    pub fn resolve_dir_paths_from_config_paths<P: AsRef<Path>>(
+        &self,
+        src_path: P,
+        config_repo_path: P,
+    ) -> DirPathInfo {
+        let src_path = src_path.as_ref();
+        let config_repo_path = config_repo_path.as_ref();
+        let full_repo_path = self.files_dir.join(&config_repo_path);
+
+        let full_src_path = if src_path.starts_with(HOME_DIR_PREFIX) {
+            self.home_dir
+                .join(src_path.strip_prefix(HOME_DIR_PREFIX).unwrap())
+        } else {
+            src_path.to_path_buf()
+        };
+
+        DirPathInfo {
+            full_src_path,
+            src_path: src_path.to_path_buf(),
+            repo_path: PathBuf::from(FILES_DIR_NAME).join(config_repo_path),
+            full_parent_repo_path: full_repo_path.parent().unwrap().to_path_buf(),
+            full_repo_path,
+            config_repo_path: config_repo_path.to_path_buf(),
+        }
+    }
+
     fn truncate_home_path(&self, p: &Path) -> PathBuf {
         if p.starts_with(&self.home_dir) {
             Path::new(HOME_DIR_PREFIX).join(p.strip_prefix(&self.home_dir).unwrap())
@@ -371,6 +397,47 @@ mod tests {
                 full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/ssh"),
                 full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home"),
             })
+        );
+    }
+
+    #[test]
+    pub fn test_resolve_dir_paths_from_config_paths() {
+        let paths = Paths::new_with_home_dir("/home/user/.twist", PathBuf::from("/home/user"));
+
+        assert_eq!(
+            paths.resolve_dir_paths_from_config_paths("~/test", "home/test"),
+            DirPathInfo {
+                full_src_path: PathBuf::from("/home/user/test"),
+                src_path: PathBuf::from("~/test"),
+                config_repo_path: PathBuf::from("home/test"),
+                repo_path: PathBuf::from("dotfiles/home/test"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/test"),
+                full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home"),
+            }
+        );
+
+        assert_eq!(
+            paths.resolve_dir_paths_from_config_paths("/etc/nginx", "etc/nginx"),
+            DirPathInfo {
+                full_src_path: PathBuf::from("/etc/nginx"),
+                src_path: PathBuf::from("/etc/nginx"),
+                config_repo_path: PathBuf::from("etc/nginx"),
+                repo_path: PathBuf::from("dotfiles/etc/nginx"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/etc/nginx"),
+                full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/etc"),
+            }
+        );
+
+        assert_eq!(
+            paths.resolve_dir_paths_from_config_paths("~/.ssh", "home/ssh"),
+            DirPathInfo {
+                full_src_path: PathBuf::from("/home/user/.ssh"),
+                src_path: PathBuf::from("~/.ssh"),
+                config_repo_path: PathBuf::from("home/ssh"),
+                repo_path: PathBuf::from("dotfiles/home/ssh"),
+                full_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home/ssh"),
+                full_parent_repo_path: PathBuf::from("/home/user/.twist/dotfiles/home"),
+            }
         );
     }
 }

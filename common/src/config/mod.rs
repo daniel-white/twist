@@ -7,6 +7,7 @@ use std::{
     fs::{File, OpenOptions},
     io::{BufReader, BufWriter, Read, Write},
     path::{Path, PathBuf},
+    rc::Rc,
 };
 
 use anyhow::Result;
@@ -67,13 +68,14 @@ pub(self) trait ConfigFilePersistence: Sized {
 }
 
 pub struct ConfigManager {
+    paths: Rc<Paths>,
     config_data: RefCell<ConfigData>,
     persistence: TomlConfigFilePersistence,
     config_file_path: PathBuf,
 }
 
 impl ConfigManager {
-    pub fn open(paths: &Paths) -> Self {
+    pub fn open(paths: &Rc<Paths>) -> Self {
         let persistence = TomlConfigFilePersistence::default();
         let config_file_path = paths.root_dir.join(persistence.file_name());
         debug!("reading configuration from {:?}", config_file_path);
@@ -87,6 +89,7 @@ impl ConfigManager {
         };
 
         Self {
+            paths: paths.clone(),
             config_data: RefCell::new(config_data),
             persistence,
             config_file_path,
@@ -106,8 +109,17 @@ impl ConfigManager {
             .write(&self.config_data.borrow(), &mut writer)
     }
 
-    pub fn config_file_repo_path(&self) -> PathBuf {
-        self.persistence.file_name()
+    pub fn files(&self) -> Vec<FilePathInfo> {
+        self.config_data
+            .borrow()
+            .files
+            .0
+            .iter()
+            .map(|(src_path, config_repo_path)| {
+                self.paths
+                    .resolve_file_paths_from_config_paths(src_path, config_repo_path)
+            })
+            .collect()
     }
 
     pub fn add_files(&self, files: &[FilePathInfo]) {
@@ -120,6 +132,19 @@ impl ConfigManager {
         for path in paths {
             self.config_data.borrow_mut().remove_file(path);
         }
+    }
+
+    pub fn dirs(&self) -> Vec<DirPathInfo> {
+        self.config_data
+            .borrow()
+            .dirs
+            .0
+            .iter()
+            .map(|(src_path, config_repo_path)| {
+                self.paths
+                    .resolve_dir_paths_from_config_paths(src_path, config_repo_path)
+            })
+            .collect()
     }
 
     pub fn add_dirs(&self, paths: &[DirPathInfo]) {

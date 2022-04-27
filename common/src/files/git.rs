@@ -180,10 +180,6 @@ impl GitRepository {
             }
         }
 
-        for e in index.iter() {
-            debug!("Staged {:?}", e);
-        }
-
         let index_oid = index.write_tree()?;
         let index_tree = self.repo.find_tree(index_oid)?;
 

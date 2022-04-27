@@ -5,7 +5,7 @@ use std::fs::copy;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-use anyhow::Result;
+use anyhow::{Ok, Result};
 
 use dircpy::copy_dir;
 use log::debug;
@@ -13,29 +13,17 @@ use log::debug;
 use crate::config::ConfigManager;
 use crate::path::{DirPathInfo, FilePathInfo, Paths};
 
-use self::git::GitRepository;
-
 pub struct FileManager {
     paths: Rc<Paths>,
     config: Rc<ConfigManager>,
-    repository: Rc<GitRepository>,
 }
 
 impl FileManager {
-    pub fn new(
-        config: &Rc<ConfigManager>,
-        paths: &Rc<Paths>,
-        repository: &Rc<GitRepository>,
-    ) -> Self {
+    pub fn new(config: &Rc<ConfigManager>, paths: &Rc<Paths>) -> Self {
         FileManager {
             config: config.clone(),
             paths: paths.clone(),
-            repository: repository.clone(),
         }
-    }
-
-    pub fn switch_profile(&self, profile: &str) -> Result<()> {
-        self.repository.switch_profile(profile)
     }
 
     pub fn add(&self, paths: &[PathBuf]) -> Result<()> {
@@ -47,7 +35,25 @@ impl FileManager {
         Ok(())
     }
 
-    pub fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
+    pub fn update(&self) -> Result<()> {
+        let files = self.config.files();
+        self.copy_files_to_repo(&files)?;
+
+        let dirs = self.config.dirs();
+        self.copy_dirs_to_repo(&dirs)?;
+        Ok(())
+    }
+
+    fn add_files(&self, files: &[FilePathInfo]) -> Result<()> {
+        if !files.is_empty() {
+            self.copy_files_to_repo(files)?;
+            self.config.add_files(files);
+        }
+
+        Ok(())
+    }
+
+    fn copy_files_to_repo(&self, files: &[FilePathInfo]) -> Result<()> {
         for file in files {
             Paths::ensure_parent_dir(&file.full_repo_path)?;
 
@@ -59,12 +65,18 @@ impl FileManager {
             copy(&file.full_src_path, &file.full_repo_path)?;
         }
 
-        self.config.add_files(files);
-
         Ok(())
     }
 
     fn add_dirs(&self, dirs: &[DirPathInfo]) -> Result<()> {
+        if !dirs.is_empty() {
+            self.copy_dirs_to_repo(dirs)?;
+            self.config.add_dirs(dirs);
+        }
+        Ok(())
+    }
+
+    fn copy_dirs_to_repo(&self, dirs: &[DirPathInfo]) -> Result<()> {
         for dir in dirs {
             debug!(
                 "copying directory {:?} to {:?}",
@@ -75,15 +87,6 @@ impl FileManager {
             copy_dir(&dir.full_src_path, &dir.full_repo_path)?;
         }
 
-        self.config.add_dirs(dirs);
         Ok(())
-    }
-
-    pub fn save_config(&self) -> Result<()> {
-        self.config.save()
-    }
-
-    pub fn commit_changes(&self, message: &str) -> Result<()> {
-        self.repository.commit(message)
     }
 }
