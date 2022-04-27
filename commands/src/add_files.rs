@@ -7,7 +7,6 @@ use twist_common::{
     config::ConfigManager,
     files::{git::GitRepository, FileManager},
     path::Paths,
-    DEFAULT_COMMIT_MESSAGE_FOR_ADD,
 };
 
 use crate::AddFilesArgs;
@@ -27,11 +26,7 @@ pub fn add_files(args: AddFilesArgs) -> Result<()> {
 
     config.save()?;
 
-    repository.commit(
-        &args
-            .message
-            .unwrap_or_else(|| DEFAULT_COMMIT_MESSAGE_FOR_ADD.to_string()),
-    )?;
+    repository.commit(&args.message)?;
 
     Ok(())
 }

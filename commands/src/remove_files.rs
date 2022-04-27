@@ -8,7 +8,6 @@ use twist_common::{
     config::ConfigManager,
     files::{git::GitRepository, FileManager},
     path::Paths,
-    DEFAULT_COMMIT_MESSAGE_FOR_REMOVE,
 };
 
 #[derive(Error, Debug)]
@@ -26,11 +25,7 @@ pub fn remove_files(args: RemoveFilesArgs) -> Result<()> {
 
     config.save()?;
 
-    repository.commit(
-        &args
-            .message
-            .unwrap_or_else(|| DEFAULT_COMMIT_MESSAGE_FOR_REMOVE.to_string()),
-    )?;
+    repository.commit(&args.message)?;
 
     Ok(())
 }

@@ -7,7 +7,6 @@ use twist_common::{
     config::ConfigManager,
     files::{git::GitRepository, FileManager},
     path::Paths,
-    DEFAULT_COMMIT_MESSAGE_FOR_UPDATE,
 };
 
 use crate::UpdateRepositoryArgs;
@@ -27,11 +26,7 @@ pub fn update_repository(args: UpdateRepositoryArgs) -> Result<()> {
 
     config.save()?;
 
-    repository.commit(
-        &args
-            .message
-            .unwrap_or_else(|| DEFAULT_COMMIT_MESSAGE_FOR_UPDATE.to_string()),
-    )?;
+    repository.commit(&args.message)?;
 
     Ok(())
 }

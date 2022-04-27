@@ -53,7 +53,7 @@ pub struct ExecGitArgs {
 pub struct AddFilesArgs {
     pub root_dir: PathBuf,
     pub profile: String,
-    pub message: Option<String>,
+    pub message: String,
     pub paths: Vec<PathBuf>,
 }
 
@@ -85,7 +85,7 @@ pub struct PushToRemoteArgs {
 pub struct RemoveFilesArgs {
     pub root_dir: PathBuf,
     pub profile: String,
-    pub message: Option<String>,
+    pub message: String,
     pub paths: Vec<PathBuf>,
 }
 
@@ -93,5 +93,5 @@ pub struct RemoveFilesArgs {
 pub struct UpdateRepositoryArgs {
     pub root_dir: PathBuf,
     pub profile: String,
-    pub message: Option<String>,
+    pub message: String,
 }

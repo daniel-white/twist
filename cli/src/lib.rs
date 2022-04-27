@@ -16,7 +16,10 @@ use twist_commands::{
     AddFilesArgs, ApplyFilesArgs, Command, ExecGitArgs, InitArgs, PullFromRemoteArgs,
     PushToRemoteArgs, RemoveFilesArgs, UpdateRepositoryArgs,
 };
-use twist_common::{DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV};
+use twist_common::{
+    DEFAULT_COMMIT_MESSAGE_FOR_ADD, DEFAULT_COMMIT_MESSAGE_FOR_REMOVE,
+    DEFAULT_COMMIT_MESSAGE_FOR_UPDATE, DEFAULT_PROFILE, PROFILE_ENV, ROOT_DIR_ENV,
+};
 
 shadow!(shadow);
 
@@ -151,8 +154,8 @@ struct ExecGitCliArgs {
 
 #[derive(Debug, Args)]
 struct AddFilesCliArgs {
-    #[clap(long, short = 'm')]
-    message: Option<String>,
+    #[clap(long, short = 'm', default_value = DEFAULT_COMMIT_MESSAGE_FOR_ADD)]
+    message: String,
 
     #[clap(parse(from_os_str), min_values = 1)]
     paths: Vec<PathBuf>,
@@ -172,8 +175,8 @@ struct PushToRemoteCliArgs {}
 
 #[derive(Debug, Args)]
 struct RemoveFilesCliArgs {
-    #[clap(long, short = 'm')]
-    message: Option<String>,
+    #[clap(long, short = 'm', default_value = DEFAULT_COMMIT_MESSAGE_FOR_REMOVE)]
+    message: String,
 
     #[clap(parse(from_os_str), min_values = 1)]
     paths: Vec<PathBuf>,
@@ -181,6 +184,6 @@ struct RemoveFilesCliArgs {
 
 #[derive(Debug, Args)]
 struct UpdateRepositoryCliArgs {
-    #[clap(long, short = 'm')]
-    message: Option<String>,
+    #[clap(long, short = 'm', default_value = DEFAULT_COMMIT_MESSAGE_FOR_UPDATE)]
+    message: String,
 }
