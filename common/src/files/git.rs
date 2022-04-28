@@ -2,9 +2,10 @@ use std::fs::{metadata, write};
 
 use anyhow::Result;
 use git2::{
-    Config as LibGitConfig, Delta as LibGitDelta, DiffOptions as LibGitDiffOptions,
-    Repository as LibGitRepository, RepositoryInitOptions as LibGitRepositoryInitOptions,
-    Signature as LibGitSignature, Time as LibGitTime,
+    BranchType as LibGitBranchType, Config as LibGitConfig, Delta as LibGitDelta,
+    DiffOptions as LibGitDiffOptions, Repository as LibGitRepository,
+    RepositoryInitOptions as LibGitRepositoryInitOptions, Signature as LibGitSignature,
+    Time as LibGitTime,
 };
 
 use log::{debug, info};
@@ -115,10 +116,26 @@ impl GitRepository {
 
         // debug!("switching branch");
 
-        // self.repo
-        //     .find_branch(profile, LibGitBranchType::Local)
-        //     .or_else(|_| self.repo.branch(profile, commit.unwrap(), false))
-        //     .unwrap();
+        let branch = self
+            .repo
+            .find_branch(profile, LibGitBranchType::Local)
+            .or_else(|_| {
+                let head_commit = match self.repo.head() {
+                    Ok(head) => head.peel_to_commit().ok(),
+                    Err(_) => None,
+                };
+                self.repo
+                    .branch(profile, head_commit.as_ref().unwrap(), false)
+            })
+            .unwrap();
+
+        if branch.is_head() {
+            return Ok(());
+        }
+
+        let reference = branch.get();
+
+        self.repo.set_head(reference.name().unwrap())?;
 
         Ok(())
     }
@@ -177,7 +194,7 @@ impl GitRepository {
                     let path = diff_delta.old_file().path().unwrap();
                     index.remove_path(path)?;
                 }
-                _ => {}
+                _ => debug!("skipping {:?} file", delta),
             }
         }
 
