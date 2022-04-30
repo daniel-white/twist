@@ -1,32 +1,15 @@
-use std::rc::Rc;
-
 use anyhow::Result;
 use thiserror::Error;
 
-use twist_common::{
-    config::ConfigManager,
-    files::{git::GitRepository, FileManager},
-    path::Paths,
-};
-
-use crate::AddFilesArgs;
+use crate::{AddFilesArgs, Context};
 
 #[derive(Error, Debug)]
 enum AddFilesError {}
 
-pub fn add_files(args: AddFilesArgs) -> Result<()> {
-    let paths = Rc::new(Paths::new(args.root_dir));
-    let config = Rc::new(ConfigManager::open(&paths));
-
-    let repository = GitRepository::open(&paths)?;
-    repository.switch_profile(&args.profile)?;
-
-    let file_manager: FileManager = FileManager::new(&config, &paths);
-    file_manager.add(&args.paths)?;
-
-    config.save()?;
-
-    repository.commit(&args.message)?;
+pub fn add_files(args: AddFilesArgs, context: Context) -> Result<()> {
+    context.file_manager.add(&args.paths)?;
+    context.config.save()?;
+    context.repo.commit(&args.message)?;
 
     Ok(())
 }

@@ -10,9 +10,7 @@ use log::{debug, warn};
 use subprocess::Exec;
 use thiserror::Error;
 
-use twist_common::path::Paths;
-
-use crate::ExecGitArgs;
+use crate::{Context, ExecGitArgs};
 
 #[derive(Error, Debug)]
 enum ExecGitError {
@@ -28,8 +26,7 @@ const GIT_WORK_TREE_FLAG: &str = "--work-tree";
 const GIT_DIR_FLAG: &str = "--git-dir";
 const GIT_EXEC_PATH_ENV_VAR: &str = "GIT_EXEC_PATH";
 
-pub fn exec_git(args: ExecGitArgs) -> Result<()> {
-    let paths = Paths::new(args.root_dir);
+pub fn exec_git(args: ExecGitArgs, context: Context) -> Result<()> {
     let git_current_directory_flag = OsStr::new(GIT_CURRENT_DIRECTORY_FLAG);
 
     let git_path = env::var(GIT_EXEC_PATH_ENV_VAR)
@@ -40,7 +37,7 @@ pub fn exec_git(args: ExecGitArgs) -> Result<()> {
 
     let mut git_args = vec![
         git_current_directory_flag.to_os_string(),
-        OsString::from(&paths.files_dir),
+        OsString::from(&context.paths.root_dir()),
     ];
 
     let mut safe_git_args: Vec<_> = SafeExecGitArgs::from(args.args).collect();

@@ -1,7 +1,7 @@
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::PushToRemoteArgs;
+use crate::{Context, PushToRemoteArgs};
 
 #[derive(Error, Debug)]
 enum PushToRemoteError {
@@ -9,6 +9,6 @@ enum PushToRemoteError {
     NotImplementedError,
 }
 
-pub fn push_to_remote(_args: PushToRemoteArgs) -> Result<()> {
+pub fn push_to_remote(_args: PushToRemoteArgs, _context: Context) -> Result<()> {
     Err(PushToRemoteError::NotImplementedError.into())
 }

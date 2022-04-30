@@ -14,84 +14,96 @@ use exec_git::exec_git;
 use pull_from_remote::pull_from_remote;
 use push_to_remote::push_to_remote;
 use remove_files::remove_files;
+use twist_common::{
+    config::ConfigManager,
+    files::{git::GitRepository, FileManager},
+    path::Paths,
+};
 use update_repository::update_repository;
 
 pub fn run_command(command: Command) -> Result<()> {
     match command {
-        Command::ExecGit(args) => exec_git(args),
-        Command::AddFiles(args) => add_files(args),
-        Command::RemoveFiles(args) => remove_files(args),
-        Command::ApplyFiles(args) => apply_files(args),
-        Command::UpdateRepository(args) => update_repository(args),
-        Command::PushToRemote(args) => push_to_remote(args),
-        Command::PullFromRemote(args) => pull_from_remote(args),
+        Command::ExecGit(args, context) => exec_git(args, context),
+        Command::AddFiles(args, context) => add_files(args, context),
+        Command::RemoveFiles(args, context) => remove_files(args, context),
+        Command::ApplyFiles(args, context) => apply_files(args, context),
+        Command::UpdateRepository(args, context) => update_repository(args, context),
+        Command::PushToRemote(args, context) => push_to_remote(args, context),
+        Command::PullFromRemote(args, context) => pull_from_remote(args, context),
         _ => Err(anyhow::anyhow!("Unsupported command")),
     }
 }
 
-use std::{ffi::OsString, path::PathBuf};
+use std::{
+    ffi::OsString,
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
-#[derive(Debug)]
 pub enum Command {
-    ExecGit(ExecGitArgs),
-    AddFiles(AddFilesArgs),
-    RemoveFiles(RemoveFilesArgs),
-    ApplyFiles(ApplyFilesArgs),
-    UpdateRepository(UpdateRepositoryArgs),
-    Init(InitArgs),
-    PullFromRemote(PullFromRemoteArgs),
-    PushToRemote(PushToRemoteArgs),
+    ExecGit(ExecGitArgs, Context),
+    AddFiles(AddFilesArgs, Context),
+    RemoveFiles(RemoveFilesArgs, Context),
+    ApplyFiles(ApplyFilesArgs, Context),
+    UpdateRepository(UpdateRepositoryArgs, Context),
+    Init(InitArgs, Context),
+    PullFromRemote(PullFromRemoteArgs, Context),
+    PushToRemote(PushToRemoteArgs, Context),
+}
+
+pub struct Context {
+    pub config: Rc<ConfigManager>,
+    pub paths: Rc<Paths>,
+    pub repo: Rc<GitRepository>,
+    pub file_manager: Rc<FileManager>,
+}
+
+impl Context {
+    pub fn new(root_dir: &Path, profile: &str) -> Result<Self> {
+        let paths = Rc::new(Paths::new(root_dir));
+        let config = Rc::new(ConfigManager::open(&paths));
+        let repo = Rc::new(GitRepository::open(&paths, profile)?);
+        let file_manager = Rc::new(FileManager::new(&config, &paths));
+
+        Ok(Self {
+            config,
+            paths,
+            repo,
+            file_manager,
+        })
+    }
 }
 
 #[derive(Debug)]
 pub struct ExecGitArgs {
-    pub root_dir: PathBuf,
     pub args: Vec<OsString>,
 }
 
 #[derive(Debug)]
 pub struct AddFilesArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
     pub message: String,
     pub paths: Vec<PathBuf>,
 }
 
 #[derive(Debug)]
-pub struct ApplyFilesArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
-}
+pub struct ApplyFilesArgs {}
 
 #[derive(Debug)]
-pub struct InitArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
-}
+pub struct InitArgs {}
 
 #[derive(Debug)]
-pub struct PullFromRemoteArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
-}
+pub struct PullFromRemoteArgs {}
 
 #[derive(Debug)]
-pub struct PushToRemoteArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
-}
+pub struct PushToRemoteArgs {}
 
 #[derive(Debug)]
 pub struct RemoveFilesArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
     pub message: String,
     pub paths: Vec<PathBuf>,
 }
 
 #[derive(Debug)]
 pub struct UpdateRepositoryArgs {
-    pub root_dir: PathBuf,
-    pub profile: String,
     pub message: String,
 }

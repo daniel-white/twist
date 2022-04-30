@@ -1,7 +1,7 @@
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::PullFromRemoteArgs;
+use crate::{Context, PullFromRemoteArgs};
 
 #[derive(Error, Debug)]
 enum PullFromRemoteError {
@@ -9,6 +9,6 @@ enum PullFromRemoteError {
     NotImplementedError,
 }
 
-pub fn pull_from_remote(_args: PullFromRemoteArgs) -> Result<()> {
+pub fn pull_from_remote(_args: PullFromRemoteArgs, _context: Context) -> Result<()> {
     Err(PullFromRemoteError::NotImplementedError.into())
 }

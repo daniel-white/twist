@@ -2,17 +2,17 @@ use std::fs::{metadata, write};
 
 use anyhow::Result;
 use git2::{
-    BranchType as LibGitBranchType, Config as LibGitConfig, Delta as LibGitDelta,
-    DiffOptions as LibGitDiffOptions, Repository as LibGitRepository,
-    RepositoryInitOptions as LibGitRepositoryInitOptions, Signature as LibGitSignature,
-    Time as LibGitTime,
+    Branch as LibGitBranch, BranchType as LibGitBranchType, Config as LibGitConfig,
+    Delta as LibGitDelta, DiffOptions as LibGitDiffOptions, Error as LibGitError,
+    Repository as LibGitRepository, RepositoryInitOptions as LibGitRepositoryInitOptions,
+    Signature as LibGitSignature, Time as LibGitTime,
 };
 
 use log::{debug, info};
 use thiserror::Error;
 use time::OffsetDateTime;
 
-use crate::{path::Paths, DEFAULT_COMMITTER_EMAIL, DEFAULT_COMMITTER_NAME, DEFAULT_PROFILE};
+use crate::{path::Paths, DEFAULT_COMMITTER_EMAIL, DEFAULT_COMMITTER_NAME};
 
 const GIT_CONFIG_USER_NAME: &str = "user.name";
 const GIT_CONFIG_USER_EMAIL: &str = "user.email";
@@ -59,7 +59,7 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
-    pub fn open(paths: &Paths) -> Result<Self> {
+    pub fn open(paths: &Paths, profile: &str) -> Result<Self> {
         let root_dir = paths.root_dir.clone();
         debug!("opening repository at {:?}", root_dir);
 
@@ -67,7 +67,7 @@ impl GitRepository {
             Ok(git_repository) => Ok(git_repository),
             Err(_) => {
                 let mut opts = LibGitRepositoryInitOptions::new();
-                let opts = opts.mkdir(true).initial_head(DEFAULT_PROFILE);
+                let opts = opts.mkdir(true).initial_head(profile);
                 LibGitRepository::init_opts(&root_dir, opts)
             }
         };
@@ -77,13 +77,6 @@ impl GitRepository {
             Err(err) => return Err(RepositoryError::InitializeGit(err.into()).into()),
         };
 
-        debug!("successfully opened repository at {:?}", root_dir);
-
-        let gitignore_file_path = root_dir.join(GITIGNORE_FILE_NAME);
-        if metadata(&gitignore_file_path).is_err() {
-            write(&gitignore_file_path, GITIGNORE_FILE_CONTENT)?
-        }
-
         let committer = match repo.config() {
             Ok(mut config) => Committer::new(&mut config),
             Err(err) => {
@@ -91,53 +84,40 @@ impl GitRepository {
                 Committer::default()
             }
         };
-
         debug!("resolved committer: {:?}", committer);
 
-        Ok(GitRepository { repo, committer })
-    }
+        debug!("successfully opened repository at {:?}", root_dir);
 
-    pub fn switch_profile(&self, profile: &str) -> Result<()> {
-        debug!("switching to profile: {}", profile);
+        let repo = Self { repo, committer };
+        repo.switch_profile(profile)?;
 
-        // debug!("resolving HEAD commit");
-        // let head = match self.repo.head() {
-        //     Ok(head) => head.resolve().ok(),
-        //     Err(_) => None,
-        // };
-
-        // let commit = match head {
-        //     Some(head) => head
-        //         .peel(LibGitObjectType::Commit)
-        //         .map(|obj| obj.clone().as_commit().unwrap())
-        //         .ok(),
-        //     None => None,
-        // };
-
-        // debug!("switching branch");
-
-        let branch = self
-            .repo
-            .find_branch(profile, LibGitBranchType::Local)
-            .or_else(|_| {
-                let head_commit = match self.repo.head() {
-                    Ok(head) => head.peel_to_commit().ok(),
-                    Err(_) => None,
-                };
-                self.repo
-                    .branch(profile, head_commit.as_ref().unwrap(), false)
-            })
-            .unwrap();
-
-        if branch.is_head() {
-            return Ok(());
+        let gitignore_file_path = root_dir.join(GITIGNORE_FILE_NAME);
+        if metadata(&gitignore_file_path).is_err() {
+            write(&gitignore_file_path, GITIGNORE_FILE_CONTENT)?
         }
 
-        let reference = branch.get();
+        Ok(repo)
+    }
 
-        self.repo.set_head(reference.name().unwrap())?;
+    fn switch_profile(&self, profile: &str) -> Result<(), LibGitError> {
+        let branch = self.repo.find_branch(profile, LibGitBranchType::Local).ok();
 
-        Ok(())
+        match branch {
+            Some(branch) => self.switch_branch(&branch),
+
+            None => self
+                .repo
+                .head()
+                .and_then(|h| h.peel_to_commit())
+                .and_then(|c| self.repo.branch(profile, &c, false))
+                .and_then(|b| self.switch_branch(&b)),
+        }
+    }
+
+    fn switch_branch(&self, branch: &LibGitBranch) -> Result<(), LibGitError> {
+        let name = branch.get().name().unwrap();
+        debug!("switching to profile: {}", name);
+        self.repo.set_head(name)
     }
 
     pub fn commit(&self, message: &str) -> Result<()> {

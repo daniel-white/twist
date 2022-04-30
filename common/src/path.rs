@@ -91,6 +91,10 @@ impl Paths {
         (files, dirs)
     }
 
+    pub fn root_dir(&self) -> &Path {
+        &self.root_dir
+    }
+
     pub fn resolve_file_paths<P: AsRef<Path>>(&self, p: P) -> Option<FilePathInfo> {
         let full_src_path = p.as_ref().to_path_buf();
 
