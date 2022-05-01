@@ -89,7 +89,7 @@ impl GitRepository {
         debug!("successfully opened repository at {:?}", root_dir);
 
         let repo = Self { repo, committer };
-        repo.switch_profile(profile)?;
+        repo.switch_profile(profile);
 
         let gitignore_file_path = root_dir.join(GITIGNORE_FILE_NAME);
         if metadata(&gitignore_file_path).is_err() {
@@ -99,19 +99,20 @@ impl GitRepository {
         Ok(repo)
     }
 
-    fn switch_profile(&self, profile: &str) -> Result<(), LibGitError> {
+    fn switch_profile(&self, profile: &str) {
         let branch = self.repo.find_branch(profile, LibGitBranchType::Local).ok();
 
-        match branch {
+        let result = match branch {
             Some(branch) => self.switch_branch(&branch),
-
             None => self
                 .repo
                 .head()
                 .and_then(|h| h.peel_to_commit())
                 .and_then(|c| self.repo.branch(profile, &c, false))
                 .and_then(|b| self.switch_branch(&b)),
-        }
+        };
+
+        result.unwrap_or_default();
     }
 
     fn switch_branch(&self, branch: &LibGitBranch) -> Result<(), LibGitError> {
