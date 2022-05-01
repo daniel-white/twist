@@ -137,13 +137,12 @@ impl GitRepository {
 
         let mut diff_options = LibGitDiffOptions::new();
         diff_options
-            .update_index(true)
             .include_untracked(true)
             .recurse_untracked_dirs(true);
 
         let diff_result = self
             .repo
-            .diff_tree_to_workdir(head_tree.as_ref(), Some(&mut diff_options));
+            .diff_tree_to_workdir_with_index(head_tree.as_ref(), Some(&mut diff_options));
 
         let diff_deltas: Vec<_> = match diff_result {
             Ok(ref diff) => diff.deltas().collect(),
@@ -173,12 +172,14 @@ impl GitRepository {
                 }
                 LibGitDelta::Deleted => {
                     let path = diff_delta.old_file().path().unwrap();
+                    debug!("Unstaging {:?} file: {:?}", delta, path);
                     index.remove_path(path)?;
                 }
                 _ => debug!("skipping {:?} file", delta),
             }
         }
 
+        index.write()?;
         let index_oid = index.write_tree()?;
         let index_tree = self.repo.find_tree(index_oid)?;
 
@@ -188,6 +189,8 @@ impl GitRepository {
 
         self.repo
             .commit(Some("HEAD"), &sig, &sig, message, &index_tree, &parents)?;
+
+        index.clear().unwrap();
 
         Ok(())
     }
