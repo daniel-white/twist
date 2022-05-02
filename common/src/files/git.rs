@@ -179,6 +179,7 @@ impl GitRepository {
             }
         }
 
+        debug!("committing changes");
         index.write()?;
         let index_oid = index.write_tree()?;
         let index_tree = self.repo.find_tree(index_oid)?;
