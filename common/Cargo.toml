@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0"
-dircpy = "0.3.9"
+dircpy = "0.3.10"
 dirs = "4.0"
 git2 = "0.14"
 glob = "0.3"
