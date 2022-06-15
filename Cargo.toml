@@ -23,6 +23,5 @@ toml = "0.5"
 
 [build-dependencies]
 twist-cli =  { path = "./cli" }
-clap = "3"
-clap_derive = "3"
+clap = { version = "3.2.4", features = ["derive", "env"] }
 clap_complete = "3"
