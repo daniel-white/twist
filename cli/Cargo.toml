@@ -8,7 +8,7 @@ build = "./build.rs"
 twist-common = { path = "../common" }
 twist-commands = { path = "../commands" }
 anyhow = "1.0"
-clap = { version = "3.2.6", features = ["derive", "env"] }
+clap = { version = "3.2.7", features = ["derive", "env"] }
 dirs = "4.0"
 simplelog = "0.12"
 thiserror = "1.0"
