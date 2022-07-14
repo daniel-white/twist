@@ -12,7 +12,7 @@ clap = { version = "3.2.12", features = ["derive", "env"] }
 dirs = "4.0"
 simplelog = "0.12"
 thiserror = "1.0"
-shadow-rs = "0.12.0"
+shadow-rs = "0.13.0"
 
 [build-dependencies]
-shadow-rs = "0.12.0"
+shadow-rs = "0.13.0"
