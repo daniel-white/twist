@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/daniel-white/twist/compare/v0.1.1...v0.1.2) (2022-08-13)
+
+
+### Bug Fixes
+
+* dependency updates and clippy conformance ([6b9f2de](https://github.com/daniel-white/twist/commit/6b9f2dee8b3f7d0b055ba3d11e095723557622dd))
+
 ### [0.1.1](https://github.com/daniel-white/twist/compare/v0.1.0...v0.1.1) (2022-05-02)
 
 
