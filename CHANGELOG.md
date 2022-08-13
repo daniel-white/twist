@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/daniel-white/twist/compare/v0.1.2...v0.1.3) (2022-08-13)
+
+
+### Bug Fixes
+
+* build on additional platforms ([e4d3128](https://github.com/daniel-white/twist/commit/e4d3128c6003d7635e787fa56f267112769a875e))
+
 ## [0.1.2](https://github.com/daniel-white/twist/compare/v0.1.1...v0.1.2) (2022-08-13)
 
 
