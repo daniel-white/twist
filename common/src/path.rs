@@ -14,14 +14,14 @@ const HIDDEN_FILE_PREFIX: &str = ".";
 
 pub const FILES_DIR_NAME: &str = "dotfiles";
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Paths {
     pub home_dir: PathBuf,
     pub root_dir: PathBuf,
     pub files_dir: PathBuf,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct FilePathInfo {
     pub full_src_path: PathBuf,
     pub src_path: PathBuf,
@@ -30,7 +30,7 @@ pub struct FilePathInfo {
     pub config_repo_path: PathBuf,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct DirPathInfo {
     pub full_src_path: PathBuf,
     pub src_path: PathBuf,
