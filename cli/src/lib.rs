@@ -139,7 +139,7 @@ struct ExecGitCliArgs {
     #[clap(long, short = 'm')]
     message: Option<String>,
 
-    #[clap(parse(from_os_str))]
+    #[clap()]
     args: Vec<OsString>,
 }
 
@@ -148,7 +148,7 @@ struct AddFilesCliArgs {
     #[clap(long, short = 'm', default_value = DEFAULT_COMMIT_MESSAGE_FOR_ADD)]
     message: String,
 
-    #[clap(parse(from_os_str), min_values = 1)]
+    #[clap(min_values = 1)]
     paths: Vec<PathBuf>,
 }
 
@@ -169,7 +169,7 @@ struct RemoveFilesCliArgs {
     #[clap(long, short = 'm', default_value = DEFAULT_COMMIT_MESSAGE_FOR_REMOVE)]
     message: String,
 
-    #[clap(parse(from_os_str), min_values = 1)]
+    #[clap(min_values = 1)]
     paths: Vec<PathBuf>,
 }
 
