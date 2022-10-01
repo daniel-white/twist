@@ -21,5 +21,8 @@
   },
   "bookmarks.sideBar.expanded": true,
   "bookmarks.useWorkaroundForFormatters": true,
-  "bookmarks.label.suggestion": "suggestWhenSelected"
+  "bookmarks.label.suggestion": "suggestWhenSelected",
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  }
 }
