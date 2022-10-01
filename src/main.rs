@@ -1,16 +1,17 @@
 use anyhow::Result;
 
 mod cli;
+mod commands;
 mod logging;
 mod path;
 
 use clap::Parser;
 use cli::{Cli, CliCommand};
+use commands::*;
 use log::error;
 use logging::init as init_logging;
 use path::root_dir;
 use std::process::exit;
-use twist_commands::*;
 
 fn main() -> Result<()> {
     let cli = Cli::parse();

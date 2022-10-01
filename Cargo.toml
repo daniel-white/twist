@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "commands",
     "common"
 ]
 
@@ -12,9 +11,9 @@ build = "build.rs"
 
 [dependencies]
 twist-common = { path = "./common" }
-twist-commands =  { path = "./commands" }
 anyhow = "1.0"
 clap = { version = "4.0.7", features = ["derive", "env"] }
+subprocess = "0.2"
 dirs = "4.0"
 git2 = "0.15.0"
 log = "0.4"

@@ -712,20 +712,9 @@ dependencies = [
  "log",
  "openssl",
  "simplelog",
- "thiserror",
- "toml",
- "twist-commands",
- "twist-common",
-]
-
-[[package]]
-name = "twist-commands"
-version = "0.1.3"
-dependencies = [
- "anyhow",
- "log",
  "subprocess",
  "thiserror",
+ "toml",
  "twist-common",
 ]
 
