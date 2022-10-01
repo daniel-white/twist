@@ -22,9 +22,7 @@ openssl = "0.10"
 thiserror = "1.0"
 toml = "0.5"
 simplelog = "0.12"
-shadow-rs = "0.16.1"
 
 [build-dependencies]
 clap = { version = "4.0.7", features = ["derive", "env"] }
 clap_complete = "4"
-shadow-rs = "0.16.1"
