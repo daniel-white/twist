@@ -1,16 +1,11 @@
-#[macro_use]
-extern crate shadow_rs;
-
-mod logging;
 mod path;
 
 use std::ffi::OsString;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use clap::{Args, CommandFactory, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand};
 
-use logging::init as init_logging;
 use path::root_dir;
 use twist_commands::{
     AddFilesArgs, ApplyFilesArgs, Command, Context, ExecGitArgs, InitArgs, PullFromRemoteArgs,
@@ -30,15 +25,15 @@ shadow!(shadow);
     long_version=shadow::CLAP_LONG_VERSION,
     allow_missing_positional = true
 )]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
-    pub command: CliCommand,
+    command: CliCommand,
 
     #[arg(long, short, env = PROFILE_ENV, default_value = DEFAULT_PROFILE, help = "Set the profile used")]
-    pub profile: String,
+    profile: String,
 
     #[arg(global = true, long = "root-dir", env = ROOT_DIR_ENV, help = "Override the default root directory")]
-    pub root_dir_override: Option<PathBuf>,
+    root_dir_override: Option<PathBuf>,
 
     #[arg(long, short, help = "Enable verbose logging")]
     pub verbose: bool,
@@ -81,7 +76,9 @@ enum CliCommand {
     PushToRemote(PushToRemoteCliArgs),
 }
 
-impl Cli {
+impl TryInto<Command> for Cli {
+    type Error = anyhow::Error;
+
     fn try_into(self) -> Result<Command> {
         let root_dir = root_dir(self.root_dir_override)?;
         let context = Context::new(&root_dir, &self.profile)?;
@@ -118,20 +115,6 @@ impl Cli {
 
         Ok(command)
     }
-}
-
-pub fn init() -> Result<Command> {
-    match Cli::try_parse() {
-        Ok(cli) => {
-            init_logging(cli.verbose)?;
-            cli.try_into()
-        }
-        Err(err) => Err(err.into()),
-    }
-}
-
-pub fn cli() -> clap::Command {
-    Cli::command()
 }
 
 #[derive(Debug, Args)]

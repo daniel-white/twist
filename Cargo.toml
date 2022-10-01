@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "cli",
     "commands",
     "common"
 ]
@@ -12,16 +11,20 @@ edition = "2021"
 build = "build.rs"
 
 [dependencies]
-twist-cli =  { path = "./cli" }
+twist-common = { path = "./common" }
 twist-commands =  { path = "./commands" }
 anyhow = "1.0"
+clap = { version = "4.0.7", features = ["derive", "env"] }
+dirs = "4.0"
 git2 = "0.14"
 log = "0.4"
 openssl = "0.10"
 thiserror = "1.0"
 toml = "0.5"
+simplelog = "0.12"
+shadow-rs = "0.16.1"
 
 [build-dependencies]
-twist-cli =  { path = "./cli" }
 clap = { version = "4.0.7", features = ["derive", "env"] }
 clap_complete = "4"
+shadow-rs = "0.16.1"

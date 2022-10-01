@@ -1,7 +1,7 @@
 {
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
-  "editor.defaultFormatter": "matklad.rust-analyzer",
+  "editor.defaultFormatter": "rust-lang.rust-analyzer",
   "cSpell.words": [
     "canonicalize",
     "dircpy",
@@ -17,7 +17,7 @@
   "rust-analyzer.checkOnSave.command": "clippy",
   "rust-analyzer.cargo.allFeatures": true,
   "[rust]": {
-    "editor.defaultFormatter": "matklad.rust-analyzer"
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
   },
   "bookmarks.sideBar.expanded": true,
   "bookmarks.useWorkaroundForFormatters": true,
