@@ -15,7 +15,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 
 use self::toml::TomlConfigFilePersistence;
-use crate::path::{DirPathInfo, FilePathInfo, Paths};
+use crate::files::path::{DirPathInfo, FilePathInfo, Paths};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub(self) struct ConfigDirsData(BTreeMap<PathBuf, PathBuf>);

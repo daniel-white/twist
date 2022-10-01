@@ -1,4 +1,5 @@
 pub mod git;
+pub mod path;
 
 use std::fs::{copy, remove_dir_all, remove_file};
 
@@ -11,7 +12,8 @@ use dircpy::copy_dir;
 use log::debug;
 
 use crate::config::ConfigManager;
-use crate::path::{DirPathInfo, FilePathInfo, Paths};
+
+use self::path::*;
 
 pub struct FileManager {
     paths: Rc<Paths>,

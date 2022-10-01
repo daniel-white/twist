@@ -14,11 +14,6 @@ use exec_git::exec_git;
 use pull_from_remote::pull_from_remote;
 use push_to_remote::push_to_remote;
 use remove_files::remove_files;
-use twist_common::{
-    config::ConfigManager,
-    files::{git::GitRepository, FileManager},
-    path::Paths,
-};
 use update_repository::update_repository;
 
 pub fn run_command(command: Command) -> Result<()> {
@@ -38,6 +33,11 @@ use std::{
     ffi::OsString,
     path::{Path, PathBuf},
     rc::Rc,
+};
+
+use crate::{
+    config::ConfigManager,
+    files::{git::GitRepository, path::Paths, FileManager},
 };
 
 pub enum Command {

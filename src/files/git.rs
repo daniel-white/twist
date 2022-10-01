@@ -12,7 +12,10 @@ use log::{debug, info};
 use thiserror::Error;
 use time::OffsetDateTime;
 
-use crate::{path::Paths, DEFAULT_COMMITTER_EMAIL, DEFAULT_COMMITTER_NAME};
+use super::path::Paths;
+
+const DEFAULT_COMMITTER_NAME: &str = "Twist";
+const DEFAULT_COMMITTER_EMAIL: &str = "twist@example.com";
 
 const GIT_CONFIG_USER_NAME: &str = "user.name";
 const GIT_CONFIG_USER_EMAIL: &str = "user.email";

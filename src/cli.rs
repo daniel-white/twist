@@ -2,13 +2,12 @@ use clap::{Args, Parser, Subcommand};
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-const DEFAULT_PROFILE: &str = "main";
-const PROFILE_ENV: &str = "TWIST_PROFILE";
-const ROOT_DIR_ENV: &str = "TWIST_ROOTDIR";
-
 const DEFAULT_COMMIT_MESSAGE_FOR_ADD: &str = "Adding new dotfiles";
 const DEFAULT_COMMIT_MESSAGE_FOR_UPDATE: &str = "Updating dotfiles";
 const DEFAULT_COMMIT_MESSAGE_FOR_REMOVE: &str = "Removing dotfiles";
+const DEFAULT_PROFILE: &str = "main";
+const PROFILE_ENV: &str = "TWIST_PROFILE";
+const ROOT_DIR_ENV: &str = "TWIST_ROOTDIR";
 
 #[derive(Debug, Parser)]
 #[command(
