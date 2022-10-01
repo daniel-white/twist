@@ -16,11 +16,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut command: Command = Cli::command();
 
-    let path = generate_to(Bash, &mut command, "twist", &outdir)?;
-    println!(
-        "cargo:warning=bash completion file is generated: {:?}",
-        path
-    );
+    generate_to(Bash, &mut command, "twist", &outdir)?;
 
     Ok(())
 }
