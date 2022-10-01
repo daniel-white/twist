@@ -63,7 +63,7 @@ pub struct GitRepository {
 
 impl GitRepository {
     pub fn open(paths: &Paths, profile: &str) -> Result<Self> {
-        let root_dir = paths.root_dir.clone();
+        let root_dir = &paths.root_dir;
         debug!("opening repository at {:?}", root_dir);
 
         let repo = match LibGitRepository::open(&root_dir) {

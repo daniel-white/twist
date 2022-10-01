@@ -1,7 +1,10 @@
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::{ApplyFilesArgs, Context};
+use super::Context;
+
+#[derive(Debug)]
+pub struct ApplyFilesArgs {}
 
 #[derive(Error, Debug)]
 enum ApplyFilesError {

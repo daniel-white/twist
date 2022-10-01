@@ -20,8 +20,9 @@ enum RootDirError {
     NotADirectory(PathBuf),
 }
 
-pub fn root_dir(root_dir_override: Option<PathBuf>) -> Result<PathBuf> {
+pub fn root_dir(root_dir_override: &Option<PathBuf>) -> Result<PathBuf> {
     let root_dir = root_dir_override
+        .clone()
         .or_else(|| home_dir().map(|home_dir| Path::new(&home_dir).join(ROOT_DIR_NAME)));
 
     match root_dir {

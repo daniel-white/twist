@@ -1,7 +1,10 @@
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::{Context, PushToRemoteArgs};
+use super::Context;
+
+#[derive(Debug)]
+pub struct PushToRemoteArgs {}
 
 #[derive(Error, Debug)]
 enum PushToRemoteError {

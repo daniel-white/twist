@@ -6,18 +6,29 @@ mod push_to_remote;
 mod remove_files;
 mod update_repository;
 
+use std::{path::Path, rc::Rc};
+
 use anyhow::Result;
 
-use add_files::add_files;
-use apply_files::apply_files;
-use exec_git::exec_git;
-use pull_from_remote::pull_from_remote;
-use push_to_remote::push_to_remote;
-use remove_files::remove_files;
-use update_repository::update_repository;
+use crate::{
+    cli::*,
+    config::*,
+    files::{git::GitRepository, path::*, FileManager},
+};
 
-pub fn run_command(command: Command) -> Result<()> {
-    match command {
+use add_files::*;
+use apply_files::*;
+use exec_git::*;
+use pull_from_remote::*;
+use push_to_remote::*;
+use remove_files::*;
+use update_repository::*;
+
+pub fn exec_command(cli: Cli) -> Result<()> {
+    let root_dir = root_dir(&cli.root_dir_override)?;
+    let context = Context::new(&root_dir, &cli.profile)?;
+
+    match Command::new(cli, context) {
         Command::ExecGit(args, context) => exec_git(args, context),
         Command::AddFiles(args, context) => add_files(args, context),
         Command::RemoveFiles(args, context) => remove_files(args, context),
@@ -28,17 +39,6 @@ pub fn run_command(command: Command) -> Result<()> {
         _ => Err(anyhow::anyhow!("Unsupported command")),
     }
 }
-
-use std::{
-    ffi::OsString,
-    path::{Path, PathBuf},
-    rc::Rc,
-};
-
-use crate::{
-    config::ConfigManager,
-    files::{git::GitRepository, path::Paths, FileManager},
-};
 
 pub enum Command {
     ExecGit(ExecGitArgs, Context),
@@ -75,35 +75,38 @@ impl Context {
 }
 
 #[derive(Debug)]
-pub struct ExecGitArgs {
-    pub args: Vec<OsString>,
-}
-
-#[derive(Debug)]
-pub struct AddFilesArgs {
-    pub message: String,
-    pub paths: Vec<PathBuf>,
-}
-
-#[derive(Debug)]
-pub struct ApplyFilesArgs {}
-
-#[derive(Debug)]
 pub struct InitArgs {}
 
-#[derive(Debug)]
-pub struct PullFromRemoteArgs {}
-
-#[derive(Debug)]
-pub struct PushToRemoteArgs {}
-
-#[derive(Debug)]
-pub struct RemoveFilesArgs {
-    pub message: String,
-    pub paths: Vec<PathBuf>,
-}
-
-#[derive(Debug)]
-pub struct UpdateRepositoryArgs {
-    pub message: String,
+impl Command {
+    pub fn new(cli: Cli, context: Context) -> Self {
+        match cli.command {
+            CliCommand::ExecGit(args) => Command::ExecGit(ExecGitArgs { args: args.args }, context),
+            CliCommand::AddFiles(args) => Command::AddFiles(
+                AddFilesArgs {
+                    message: args.message,
+                    paths: args.paths,
+                },
+                context,
+            ),
+            CliCommand::RemoveFiles(args) => Command::RemoveFiles(
+                RemoveFilesArgs {
+                    message: args.message,
+                    paths: args.paths,
+                },
+                context,
+            ),
+            CliCommand::ApplyFiles(_args) => Command::ApplyFiles(ApplyFilesArgs {}, context),
+            CliCommand::UpdateRepository(args) => Command::UpdateRepository(
+                UpdateRepositoryArgs {
+                    message: args.message,
+                },
+                context,
+            ),
+            CliCommand::Init(_args) => Command::Init(InitArgs {}, context),
+            CliCommand::PullFromRemote(_args) => {
+                Command::PullFromRemote(PullFromRemoteArgs {}, context)
+            }
+            CliCommand::PushToRemote(_args) => Command::PushToRemote(PushToRemoteArgs {}, context),
+        }
+    }
 }

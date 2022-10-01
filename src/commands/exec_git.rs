@@ -1,16 +1,20 @@
+use anyhow::Result;
+use log::{debug, warn};
 use std::{
     env,
     ffi::{OsStr, OsString},
     path::Path,
     vec::IntoIter,
 };
-
-use anyhow::Result;
-use log::{debug, warn};
 use subprocess::Exec;
 use thiserror::Error;
 
-use crate::{Context, ExecGitArgs};
+use super::Context;
+
+#[derive(Debug)]
+pub struct ExecGitArgs {
+    pub args: Vec<OsString>,
+}
 
 #[derive(Error, Debug)]
 enum ExecGitError {

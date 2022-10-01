@@ -1,7 +1,14 @@
 use anyhow::Result;
+use std::path::PathBuf;
 use thiserror::Error;
 
-use crate::{Context, RemoveFilesArgs};
+use super::Context;
+
+#[derive(Debug)]
+pub struct RemoveFilesArgs {
+    pub message: String,
+    pub paths: Vec<PathBuf>,
+}
 
 #[derive(Error, Debug)]
 enum RemoveFilesError {}

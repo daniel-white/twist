@@ -1,7 +1,15 @@
+use std::path::PathBuf;
+
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::{AddFilesArgs, Context};
+use super::Context;
+
+#[derive(Debug)]
+pub struct AddFilesArgs {
+    pub message: String,
+    pub paths: Vec<PathBuf>,
+}
 
 #[derive(Error, Debug)]
 enum AddFilesError {}

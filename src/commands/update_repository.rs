@@ -1,7 +1,12 @@
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::{Context, UpdateRepositoryArgs};
+use super::Context;
+
+#[derive(Debug)]
+pub struct UpdateRepositoryArgs {
+    pub message: String,
+}
 
 #[derive(Error, Debug)]
 enum UpdateRepositoryError {}

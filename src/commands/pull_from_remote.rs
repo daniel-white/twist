@@ -1,7 +1,10 @@
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::{Context, PullFromRemoteArgs};
+use super::Context;
+
+#[derive(Debug)]
+pub struct PullFromRemoteArgs {}
 
 #[derive(Error, Debug)]
 enum PullFromRemoteError {
