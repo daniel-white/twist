@@ -162,7 +162,7 @@ impl Paths {
             src_path: src_path.to_path_buf(),
             config_repo_path: config_repo_path.to_path_buf(),
             repo_path: PathBuf::from(FILES_DIR_NAME).join(config_repo_path),
-            full_repo_path: self.files_dir.join(&config_repo_path),
+            full_repo_path: self.files_dir.join(config_repo_path),
         }
     }
 
@@ -203,7 +203,7 @@ impl Paths {
     ) -> DirPathInfo {
         let src_path = src_path.as_ref();
         let config_repo_path = config_repo_path.as_ref();
-        let full_repo_path = self.files_dir.join(&config_repo_path);
+        let full_repo_path = self.files_dir.join(config_repo_path);
 
         let full_src_path = if src_path.starts_with(HOME_DIR_PREFIX) {
             self.home_dir
@@ -259,13 +259,13 @@ impl Paths {
     pub fn ensure_parent_dir<P: AsRef<Path>>(p: P) -> Result<()> {
         let p = p.as_ref().parent().unwrap();
         debug!("Ensuring directory exists: {:?}", p);
-        match metadata(&p) {
+        match metadata(p) {
             Ok(metadata) if metadata.is_dir() => {
                 debug!("parent path is directory");
                 Ok(())
             }
             Ok(_) => Err(PathsError::ExistingPathIsNotADirectory(p.to_path_buf()).into()),
-            _ => create_dir_all(&p)
+            _ => create_dir_all(p)
                 .map(|_| debug!("created directory"))
                 .map_err(|_| PathsError::UnableToCreateDirectory(p.to_path_buf()).into()),
         }

@@ -66,12 +66,12 @@ impl GitRepository {
         let root_dir = &paths.root_dir;
         debug!("opening repository at {:?}", root_dir);
 
-        let repo = match LibGitRepository::open(&root_dir) {
+        let repo = match LibGitRepository::open(root_dir) {
             Ok(git_repository) => Ok(git_repository),
             Err(_) => {
                 let mut opts = LibGitRepositoryInitOptions::new();
                 let opts = opts.mkdir(true).initial_head(profile);
-                LibGitRepository::init_opts(&root_dir, opts)
+                LibGitRepository::init_opts(root_dir, opts)
             }
         };
 
