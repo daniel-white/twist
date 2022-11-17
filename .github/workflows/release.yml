@@ -86,7 +86,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup | Cache
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
 
       - name: Setup | OpenSSL (ubuntu)
         if: matrix.os == 'ubuntu-latest'
