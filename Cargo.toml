@@ -18,7 +18,7 @@ simplelog = "0.12"
 subprocess = "0.2"
 thiserror = "1.0"
 time = { version = "0.3", features = ["local-offset"] }
-toml = "0.6"
+toml = "0.7"
 
 [build-dependencies]
 clap = { version = "4.1.6", features = ["derive", "env"] }
