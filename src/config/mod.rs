@@ -76,7 +76,7 @@ pub struct ConfigManager {
 
 impl ConfigManager {
     pub fn open(paths: &Rc<Paths>) -> Self {
-        let persistence = TomlConfigFilePersistence::default();
+        let persistence = TomlConfigFilePersistence::new();
         let config_file_path = paths.root_dir.join(persistence.file_name());
         debug!("reading configuration from {:?}", config_file_path);
 

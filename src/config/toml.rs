@@ -10,8 +10,13 @@ use super::{ConfigData, ConfigFilePersistence};
 
 const TOML_CONFIG_FILE_NAME: &str = "config.toml";
 
-#[derive(Default)]
 pub(super) struct TomlConfigFilePersistence;
+
+impl TomlConfigFilePersistence {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl ConfigFilePersistence for TomlConfigFilePersistence {
     fn file_name(&self) -> PathBuf {
