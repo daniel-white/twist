@@ -54,36 +54,28 @@ impl ConfigData {
 }
 
 pub(self) trait ConfigFilePersistence: Sized {
-    fn file_name(&self) -> PathBuf
-    where
-        Self: Sized;
+    fn file_name() -> PathBuf;
 
-    fn read(&self, reader: &mut impl Read) -> Result<ConfigData>
-    where
-        Self: Sized;
+    fn read(reader: &mut impl Read) -> Result<ConfigData>;
 
-    fn write(&self, config: &ConfigData, writer: &mut impl Write) -> Result<()>
-    where
-        Self: Sized;
+    fn write(config: &ConfigData, writer: &mut impl Write) -> Result<()>;
 }
 
 pub struct ConfigManager {
     paths: Rc<Paths>,
     config_data: RefCell<ConfigData>,
-    persistence: TomlConfigFilePersistence,
     config_file_path: PathBuf,
 }
 
 impl ConfigManager {
     pub fn open(paths: &Rc<Paths>) -> Self {
-        let persistence = TomlConfigFilePersistence::new();
-        let config_file_path = paths.root_dir.join(persistence.file_name());
+        let config_file_path = paths.root_dir.join(TomlConfigFilePersistence::file_name());
         debug!("reading configuration from {:?}", config_file_path);
 
         let config_data = match File::open(&config_file_path) {
             Ok(file) => {
                 let mut reader = BufReader::new(file);
-                persistence.read(&mut reader).unwrap_or_default()
+                TomlConfigFilePersistence::read(&mut reader).unwrap_or_default()
             }
             _ => ConfigData::default(),
         };
@@ -91,7 +83,6 @@ impl ConfigManager {
         Self {
             paths: paths.clone(),
             config_data: RefCell::new(config_data),
-            persistence,
             config_file_path,
         }
     }
@@ -105,8 +96,7 @@ impl ConfigManager {
 
         let mut writer = BufWriter::new(config_file);
 
-        self.persistence
-            .write(&self.config_data.borrow(), &mut writer)
+        TomlConfigFilePersistence::write(&self.config_data.borrow(), &mut writer)
     }
 
     pub fn files(&self) -> Vec<FilePathInfo> {

@@ -12,24 +12,18 @@ const TOML_CONFIG_FILE_NAME: &str = "config.toml";
 
 pub(super) struct TomlConfigFilePersistence;
 
-impl TomlConfigFilePersistence {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
 impl ConfigFilePersistence for TomlConfigFilePersistence {
-    fn file_name(&self) -> PathBuf {
+    fn file_name() -> PathBuf {
         PathBuf::from(TOML_CONFIG_FILE_NAME)
     }
 
-    fn read(&self, reader: &mut impl Read) -> Result<ConfigData> {
+    fn read(reader: &mut impl Read) -> Result<ConfigData> {
         let mut toml = String::new();
         reader.read_to_string(&mut toml)?;
         Ok(from_toml_str(&toml)?)
     }
 
-    fn write(&self, data: &ConfigData, writer: &mut impl Write) -> Result<()> {
+    fn write(data: &ConfigData, writer: &mut impl Write) -> Result<()> {
         let toml = to_toml_string(data)?;
         write!(writer, "{}", toml)?;
         Ok(())
