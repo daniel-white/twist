@@ -18,13 +18,13 @@ use self::toml::TomlConfigFilePersistence;
 use crate::files::path::{DirPathInfo, FilePathInfo, Paths};
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub(self) struct ConfigDirsData(BTreeMap<PathBuf, PathBuf>);
+pub struct ConfigDirsData(BTreeMap<PathBuf, PathBuf>);
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub(self) struct ConfigFilesData(BTreeMap<PathBuf, PathBuf>);
+pub struct ConfigFilesData(BTreeMap<PathBuf, PathBuf>);
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-pub(self) struct ConfigData {
+pub struct ConfigData {
     #[serde(default)]
     dirs: ConfigDirsData,
     #[serde(default)]
@@ -53,7 +53,7 @@ impl ConfigData {
     }
 }
 
-pub(self) trait ConfigFilePersistence: Sized {
+pub trait ConfigFilePersistence: Sized {
     fn file_name() -> PathBuf;
 
     fn read(reader: &mut impl Read) -> Result<ConfigData>;
