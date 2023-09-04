@@ -94,11 +94,8 @@ jobs:
           sudo apt-get install -yq pkg-config libssl-dev
 
       - name: Setup | Rust
-        uses: actions-rs/toolchain@v1.0.7
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
-          override: true
-          profile: minimal
           target: ${{ matrix.target }}
 
       - name: Build | Build
@@ -266,11 +263,7 @@ jobs:
   #       uses: actions/checkout@v3
 
   #     - name: Setup | Rust
-  #       uses: actions-rs/toolchain@v1.0.7
-  #       with:
-  #         toolchain: stable
-  #         profile: minimal
-  #         override: true
+  #       uses: dtolnay/rust-toolchain@stable
 
   #     - name: Build | Publish
   #       run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}

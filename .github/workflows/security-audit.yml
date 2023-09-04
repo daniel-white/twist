@@ -17,12 +17,10 @@ jobs:
     steps:
       - name: Setup | Checkout
         uses: actions/checkout@v3
+
       - name: Setup | Rust
-        uses: actions-rs/toolchain@v1.0.7
-        with:
-          toolchain: stable
-          override: true
-          profile: minimal
+        uses: dtolnay/rust-toolchain@stable
+        
       - name: Test | Security Audit
         uses: actions-rs/audit-check@v1.2.0
         with:
