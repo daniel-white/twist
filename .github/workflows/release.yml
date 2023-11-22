@@ -99,11 +99,7 @@ jobs:
           target: ${{ matrix.target }}
 
       - name: Build | Build
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: build
-          args: --release --locked --target ${{ matrix.target }}
-          use-cross: ${{ matrix.os == 'ubuntu-latest' }}
+        run: cargo build --release --locked --target ${{ matrix.target }}
 
       # - name: Post Build | Prepare artifacts [Windows]
       #   if: matrix.os == 'windows-latest'
