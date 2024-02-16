@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/daniel-white/twist/compare/v0.1.3...v0.1.4) (2024-02-16)
+
+
+### Bug Fixes
+
+* upgrade build ([#287](https://github.com/daniel-white/twist/issues/287)) ([ae27be7](https://github.com/daniel-white/twist/commit/ae27be7b1233b77912b9f25314674cd6ccd3876d))
+
 ## [0.1.3](https://github.com/daniel-white/twist/compare/v0.1.2...v0.1.3) (2022-08-13)
 
 
