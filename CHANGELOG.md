@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/daniel-white/twist/compare/v0.1.4...v0.2.0) (2024-02-19)
+
+
+### Features
+
+* **build:** apple silicon build ([280067d](https://github.com/daniel-white/twist/commit/280067d17931124aaf3f620fb663e143bd440a32))
+
 ## [0.1.4](https://github.com/daniel-white/twist/compare/v0.1.3...v0.1.4) (2024-02-16)
 
 
