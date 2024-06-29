@@ -1,6 +1,7 @@
 mod add_files;
 mod apply_files;
 mod exec_git;
+mod init_repo;
 mod pull_from_remote;
 mod push_to_remote;
 mod remove_files;
@@ -19,6 +20,7 @@ use crate::{
 use add_files::*;
 use apply_files::*;
 use exec_git::*;
+use init_repo::*;
 use pull_from_remote::*;
 use push_to_remote::*;
 use remove_files::*;
@@ -29,6 +31,7 @@ pub fn exec_command(cli: Cli) -> Result<()> {
     let context = Context::new(&root_dir, &cli.profile)?;
 
     match Command::new(cli, context) {
+        Command::InitRepo(args, context) => init_repo(args, context),
         Command::ExecGit(args, context) => exec_git(args, context),
         Command::AddFiles(args, context) => add_files(args, context),
         Command::RemoveFiles(args, context) => remove_files(args, context),
@@ -36,7 +39,6 @@ pub fn exec_command(cli: Cli) -> Result<()> {
         Command::UpdateRepository(args, context) => update_repository(args, context),
         Command::PushToRemote(args, context) => push_to_remote(args, context),
         Command::PullFromRemote(args, context) => pull_from_remote(args, context),
-        _ => Err(anyhow::anyhow!("Unsupported command")),
     }
 }
 
@@ -46,7 +48,7 @@ pub enum Command {
     RemoveFiles(RemoveFilesArgs, Context),
     ApplyFiles(ApplyFilesArgs, Context),
     UpdateRepository(UpdateRepositoryArgs, Context),
-    Init(InitArgs, Context),
+    InitRepo(InitRepoArgs, Context),
     PullFromRemote(PullFromRemoteArgs, Context),
     PushToRemote(PushToRemoteArgs, Context),
 }
@@ -74,9 +76,6 @@ impl Context {
     }
 }
 
-#[derive(Debug)]
-pub struct InitArgs {}
-
 impl Command {
     pub fn new(cli: Cli, context: Context) -> Self {
         match cli.command {
@@ -102,7 +101,7 @@ impl Command {
                 },
                 context,
             ),
-            CliCommand::Init(_args) => Command::Init(InitArgs {}, context),
+            CliCommand::Init(_args) => Command::InitRepo(InitRepoArgs {}, context),
             CliCommand::PullFromRemote(_args) => {
                 Command::PullFromRemote(PullFromRemoteArgs {}, context)
             }
