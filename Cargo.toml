@@ -7,7 +7,7 @@ build = "build.rs"
 [dependencies]
 anyhow = "1.0"
 clap = { version = "4.5.10", features = ["derive", "env"] }
-dircpy = "0.3.17"
+dircpy = "0.3.18"
 dirs = "5.0"
 git2 = "0.19.0"
 glob = "0.3"
